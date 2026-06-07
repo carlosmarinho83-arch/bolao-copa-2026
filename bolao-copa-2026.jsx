@@ -1622,7 +1622,7 @@ export default function BolaoApp() {
                           return (
                             <div key={g.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "3px 0", borderBottom: "1px solid #1B5E2011" }}>
                               <span style={{ color: "#4A4A4A" }}>{FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}</span>
-                              <span style={{ color: exact ? "#F8B602" : winner ? "#81C784" : s?.home !== undefined ? "#81C784" : "#1B5E20", fontWeight: exact || winner ? 700 : 400 }}>
+                              <span style={{ color: exact ? "#F8B602" : winner ? "#81C784" : s?.home !== undefined ? "#81C784" : "#1B5E20", fontWeight: exact || winner ? 700 : 400, filter: betsRevealed ? "none" : "blur(5px)", userSelect: betsRevealed ? "auto" : "none" }}>
                                 {s?.home !== undefined ? `${s.home}–${s.away}${exact ? " ⭐" : winner ? " ✓" : ""}` : "—"}
                               </span>
                             </div>
