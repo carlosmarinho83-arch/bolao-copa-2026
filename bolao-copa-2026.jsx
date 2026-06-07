@@ -1289,22 +1289,21 @@ export default function BolaoApp() {
               </div>
             </div>
 
-              {/* Regras button */}
-              <div style={{ marginTop: 10, display: "flex", justifyContent: "center" }}>
-                <button
-                  onClick={() => setShowRules(true)}
-                  style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    fontSize: 11, color: "rgba(255,255,255,0.5)",
-                    fontFamily: "'Inter',sans-serif", fontWeight: 600,
-                    display: "flex", alignItems: "center", gap: 4,
-                    padding: "4px 10px", borderRadius: 20,
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  📋 Ver regras do bolão
-                </button>
-              </div>
+              {/* ── REGRAS BUTTON ── */}
+            </div>
+            <div style={{ padding: "16px 20px 0" }}>
+              <button
+                onClick={() => setShowRules(true)}
+                style={{
+                  width: "100%", padding: "15px 0",
+                  background: C.yellow, border: "none", borderRadius: 16,
+                  fontFamily: "'Poppins',sans-serif", fontWeight: 800,
+                  fontSize: 15, color: C.greenDark, cursor: "pointer",
+                  letterSpacing: 0.3,
+                }}
+              >
+                Regras do Jogo
+              </button>
 
             {/* ── CENTRO AO VIVO ── */}
             <CentroAoVivo
