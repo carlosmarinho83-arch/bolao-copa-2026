@@ -1776,7 +1776,6 @@ export default function BolaoApp() {
                     );
                   })}
                 </div>
-              </div>
                 </div>
                 )}
               </div>
