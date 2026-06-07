@@ -1552,14 +1552,21 @@ export default function BolaoApp() {
               <Badge color="#4CAF50">🟢 Admin</Badge>
             </div>
 
-            <div style={{ display: "flex", gap: 4, background: "#FFFFFF", padding: 4, borderRadius: 12, marginBottom: 22 }}>
-              {[["bets","👥 Apostas"],["games","⚽ Jogos"],["results","🏁 Resultados"],["live","📡 Ao Vivo"]].map(([id, label]) => (
+            <div style={{ display: "flex", gap: 4, background: "#F1F5F9", padding: 4, borderRadius: 14, marginBottom: 22 }}>
+              {[["bets","👥","Apostas"],["games","⚽","Jogos"],["results","🏁","Resultados"],["live","📡","Ao Vivo"]].map(([id, icon, label]) => (
                 <button key={id} onClick={() => setAdminTab(id)} style={{
-                  flex: 1, padding: "9px 10px", borderRadius: 9, border: "none",
-                  background: adminTab === id ? "#1B5E20" : "rgba(0,0,0,0.04)",
-                  color: adminTab === id ? "#F8B602" : "#2E6B00",
-                  fontWeight: 800, fontSize: 12, cursor: "pointer", transition: "all 0.15s",
-                }}>{label}</button>
+                  flex: 1, padding: "8px 4px", borderRadius: 10, border: "none",
+                  background: adminTab === id ? "#1B5E20" : "transparent",
+                  color: adminTab === id ? "#F8B602" : "#64748B",
+                  fontWeight: 700, fontSize: 10,
+                  cursor: "pointer", transition: "all 0.15s",
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: 3,
+                  fontFamily: "'Inter',sans-serif",
+                }}>
+                  <span style={{ fontSize: 18 }}>{icon}</span>
+                  <span>{label}</span>
+                </button>
               ))}
             </div>
 
@@ -1664,8 +1671,7 @@ export default function BolaoApp() {
             {adminTab === "results" && (
               <div>
                 <div style={{ background: "#1B5E20", border: "1px solid #4CAF5033", borderRadius: 12, padding: 12, marginBottom: 20, fontSize: 13, color: "#81C784" }}>
-                  💡 Insira o placar final. Os pontos são calculados automaticamente.<br />
-                  <strong>Placar exato = 3 pts · Vencedor certo = 1 pt</strong>
+                  💡 Insira o placar final de cada jogo.
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {games.map(g => {
@@ -1680,15 +1686,19 @@ export default function BolaoApp() {
                         <div style={{ textAlign: "center", fontWeight: 700, color: "#111111", fontSize: 14, marginBottom: 14 }}>
                           {FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}
                         </div>
-                        <div style={{ display: "flex", gap: 16, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                          <div style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#4A4A4A", marginBottom: 6 }}>{g.home}</div>
-                            <ScoreInput value={rs.home} onChange={v => setResultScores(p => ({ ...p, [g.id]: { ...p[g.id], home: v } }))} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0" }}>
+                            <div style={{ width: 76, fontSize: 12, fontWeight: 700, color: "#1E293B", textAlign: "right", flexShrink: 0 }}>
+                              {FLAGS[g.home]} {g.home}
+                            </div>
+                            <ScoreInput value={rs.home} onChange={v => setResultScores(p => ({ ...p, [g.id]: { ...p[g.id], home: v } }))} fullWidth />
                           </div>
-                          <div style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 26, color: "#1B5E20", paddingTop: 20 }}>–</div>
-                          <div style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: 11, color: "#4A4A4A", marginBottom: 6 }}>{g.away}</div>
-                            <ScoreInput value={rs.away} onChange={v => setResultScores(p => ({ ...p, [g.id]: { ...p[g.id], away: v } }))} />
+                          <div style={{ height: 1, background: "#F1F5F9", margin: "0 0 0 84px" }} />
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0" }}>
+                            <div style={{ width: 76, fontSize: 12, fontWeight: 700, color: "#1E293B", textAlign: "right", flexShrink: 0 }}>
+                              {FLAGS[g.away]} {g.away}
+                            </div>
+                            <ScoreInput value={rs.away} onChange={v => setResultScores(p => ({ ...p, [g.id]: { ...p[g.id], away: v } }))} fullWidth />
                           </div>
                         </div>
                         <button onClick={() => saveResult(g.id)} style={{ ...btn("primary"), width: "100%", fontSize: 13 }}>
