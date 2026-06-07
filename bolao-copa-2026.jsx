@@ -1580,7 +1580,7 @@ export default function BolaoApp() {
                           {bet.phone && <div style={{ fontSize: 12, color: "#4A4A4A" }}>📱 {bet.phone}</div>}
                           <div style={{ fontSize: 11, color: "#4A4A4A" }}>{bet.createdAt}</div>
                         </div>
-                        <div style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 24, color: "#F8B602" }}>{calcPoints(bet)} pts</div>
+                        <div style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 24, color: "#F8B602" }}>{ acertouExato(bet) ? "✓ Acertou" : "—" }</div>
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 12 }}>
                         {games.filter(g => filterGame === "all" || g.id === filterGame).map(g => {
