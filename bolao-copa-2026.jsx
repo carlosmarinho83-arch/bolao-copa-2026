@@ -168,8 +168,8 @@ function SplashScreen({ onDone }) {
         style={{
           width: "100%",
           height: "100%",
-          objectFit: "cover",
-          objectPosition: "top center",
+          objectFit: "contain",
+          objectPosition: "center center",
           transform: phase === "in" ? "scale(1.06)" : "scale(1)",
           transition: "transform 0.6s ease",
         }}
@@ -421,7 +421,7 @@ function RulesModal({ onClose }) {
       icon: "📲",
       title: "PAGAMENTO",
       text: "Envie o pagamento e aguarde a confirmação dentro do aplicativo.",
-      highlight: "Apostas sem confirmação poderão ser desconsideradas.",
+      highlight: "Apostas sem confirmação de pagamento serão desconsideradas.",
     },
     {
       icon: "🇧🇷",
@@ -1202,14 +1202,14 @@ export default function BolaoApp() {
           )}
           <button
             onClick={() => setShowRules(true)}
-            style={{ width: 36, height: 36, borderRadius: "50%", border: "none",
-              background: "rgba(255,255,255,0.12)", color: "#FFFFFF",
-              fontSize: 16, cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center",
-              marginLeft: 4,
+            style={{
+              padding: "8px 14px", borderRadius: 20, border: "none",
+              background: C.yellow, color: C.greenDark,
+              fontSize: 12, fontWeight: 800, cursor: "pointer",
+              fontFamily: "'Poppins',sans-serif", letterSpacing: 0.3,
+              marginLeft: 4, whiteSpace: "nowrap",
             }}
-            title="Regras"
-          >📋</button>
+          >📋 Regras</button>
         </div>
       </header>
 
