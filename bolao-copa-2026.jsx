@@ -1535,8 +1535,7 @@ export default function BolaoApp() {
               {loginError && <div style={{ color: "#FF6B6B", fontSize: 13, marginBottom: 12 }}>{loginError}</div>}
               <button onClick={doLogin} style={{ ...btn("primary"), width: "100%" }}>Entrar</button>
               <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: "#4A4A4A" }}>
-                Senha: <code style={{ color: "#F8B602" }}>admin2026</code>
-              </div>
+                </div>
             </div>
             <button onClick={() => setView("home")} style={{ ...btn(), width: "100%", marginTop: 12 }}>← Voltar</button>
           </div>
