@@ -1693,42 +1693,33 @@ export default function BolaoApp() {
             {/* Tab Resultados */}
             {adminTab === "results" && (
               <div>
-                {/* Bloqueia resultados antes do kickoff */}
-                {!betsRevealed ? (
-                  <div style={{
-                    textAlign: "center", padding: "48px 20px",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
-                  }}>
-                    <div style={{ fontSize: 56 }}>🔒</div>
-                    <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 18, color: "#1E293B" }}>
-                      Resultados bloqueados
-                    </div>
-                    <div style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6, maxWidth: 260 }}>
-                      Os resultados só podem ser inseridos após o início de cada jogo. Curta a emoção junto com o grupo! 🎉
-                    </div>
-                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-                      {games.map(g => (
-                        <div key={g.id} style={{
-                          background: "#F8FAFC", border: "1px solid #E2E8F0",
-                          borderRadius: 12, padding: "12px 16px",
-                          display: "flex", justifyContent: "space-between", alignItems: "center",
-                        }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
-                            {FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}
-                          </span>
-                          {isGameRevealed(g)
-                            ? <span style={{ fontSize: 11, fontWeight: 700, color: "#166534", background: "#F0FDF4", padding: "3px 10px", borderRadius: 20 }}>🔓 Liberado</span>
-                            : <span style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", background: "#F1F5F9", padding: "3px 10px", borderRadius: 20 }}>⏳ {g.date.split("·")[0].trim()}</span>
-                          }
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                <div>
-                <div style={{ background: "#1B5E20", border: "1px solid #4CAF5033", borderRadius: 12, padding: 12, marginBottom: 20, fontSize: 13, color: "#81C784" }}>
+                <div style={{ background: "#1B5E20", border: "1px solid #4CAF5033", borderRadius: 12, padding: 12, marginBottom: 16, fontSize: 13, color: "#81C784" }}>
                   💡 Insira o placar final de cada jogo.
                 </div>
+
+                {/* Botão limpar todos para testes */}
+                {games.some(g => g.homeScore !== undefined) && (
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm("Limpar TODOS os resultados? Isso não pode ser desfeito.")) return;
+                      for (const g of games) {
+                        try { await setDoc(doc(db, "games", g.id), { homeScore: null, awayScore: null }, { merge: true }); } catch {}
+                      }
+                      setGames(DEFAULT_GAMES);
+                      setResultScores({});
+                      notify("Todos os resultados foram removidos.");
+                    }}
+                    style={{
+                      width: "100%", marginBottom: 16, padding: "10px 0",
+                      background: "#FEF2F2", border: "1.5px solid #FECACA",
+                      borderRadius: 12, color: "#DC2626", fontSize: 13,
+                      fontWeight: 700, cursor: "pointer",
+                      fontFamily: "'Inter',sans-serif",
+                    }}
+                  >
+                    🗑 Limpar todos os resultados
+                  </button>
+                )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {games.map(g => {
                     const rs = resultScores[g.id] || { home: g.homeScore, away: g.awayScore };
@@ -1776,8 +1767,6 @@ export default function BolaoApp() {
                     );
                   })}
                 </div>
-                </div>
-                )}
               </div>
             )}
 
