@@ -927,9 +927,11 @@ export default function BolaoApp() {
       if (snap.empty) return;
       const savedGames = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       // Mescla com DEFAULT_GAMES para preservar kickoff e outros campos
+      // null do Firestore = resultado removido, trata como undefined
       setGames(DEFAULT_GAMES.map(def => {
         const saved = savedGames.find(s => s.id === def.id);
-        return saved ? { ...def, homeScore: saved.homeScore, awayScore: saved.awayScore } : def;
+        if (!saved || saved.homeScore === null || saved.homeScore === undefined) return def;
+        return { ...def, homeScore: saved.homeScore, awayScore: saved.awayScore };
       }));
     }, (err) => {
       console.error("Firebase games error:", err);
@@ -1068,9 +1070,30 @@ export default function BolaoApp() {
       notify("Resultado salvo! ✅");
     } catch (err) {
       console.error("Erro ao salvar resultado:", err);
-      // Fallback local
       setGames(prev => prev.map(g => g.id === gameId ? { ...g, homeScore: r.home, awayScore: r.away } : g));
       notify("Resultado salvo localmente.");
+    }
+  }
+
+  async function clearResult(gameId) {
+    if (!window.confirm("Desfazer o resultado deste jogo?")) return;
+    try {
+      await setDoc(doc(db, "games", gameId), { homeScore: null, awayScore: null }, { merge: true });
+      setGames(prev => prev.map(g => {
+        if (g.id !== gameId) return g;
+        const { homeScore, awayScore, ...rest } = g;
+        return rest;
+      }));
+      setResultScores(p => ({ ...p, [gameId]: { home: undefined, away: undefined } }));
+      notify("Resultado removido.");
+    } catch (err) {
+      console.error("Erro ao remover resultado:", err);
+      setGames(prev => prev.map(g => {
+        if (g.id !== gameId) return g;
+        const { homeScore, awayScore, ...rest } = g;
+        return rest;
+      }));
+      notify("Resultado removido localmente.");
     }
   }
 
@@ -1670,6 +1693,39 @@ export default function BolaoApp() {
             {/* Tab Resultados */}
             {adminTab === "results" && (
               <div>
+                {/* Bloqueia resultados antes do kickoff */}
+                {!betsRevealed ? (
+                  <div style={{
+                    textAlign: "center", padding: "48px 20px",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
+                  }}>
+                    <div style={{ fontSize: 56 }}>🔒</div>
+                    <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 18, color: "#1E293B" }}>
+                      Resultados bloqueados
+                    </div>
+                    <div style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6, maxWidth: 260 }}>
+                      Os resultados só podem ser inseridos após o início de cada jogo. Curta a emoção junto com o grupo! 🎉
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+                      {games.map(g => (
+                        <div key={g.id} style={{
+                          background: "#F8FAFC", border: "1px solid #E2E8F0",
+                          borderRadius: 12, padding: "12px 16px",
+                          display: "flex", justifyContent: "space-between", alignItems: "center",
+                        }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "#1E293B" }}>
+                            {FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}
+                          </span>
+                          {isGameRevealed(g)
+                            ? <span style={{ fontSize: 11, fontWeight: 700, color: "#166534", background: "#F0FDF4", padding: "3px 10px", borderRadius: 20 }}>🔓 Liberado</span>
+                            : <span style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", background: "#F1F5F9", padding: "3px 10px", borderRadius: 20 }}>⏳ {g.date.split("·")[0].trim()}</span>
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                <div>
                 <div style={{ background: "#1B5E20", border: "1px solid #4CAF5033", borderRadius: 12, padding: 12, marginBottom: 20, fontSize: 13, color: "#81C784" }}>
                   💡 Insira o placar final de cada jogo.
                 </div>
@@ -1701,13 +1757,28 @@ export default function BolaoApp() {
                             <ScoreInput value={rs.away} onChange={v => setResultScores(p => ({ ...p, [g.id]: { ...p[g.id], away: v } }))} fullWidth />
                           </div>
                         </div>
-                        <button onClick={() => saveResult(g.id)} style={{ ...btn("primary"), width: "100%", fontSize: 13 }}>
-                          {g.homeScore !== undefined ? "Atualizar Resultado" : "Salvar Resultado"}
-                        </button>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => saveResult(g.id)} style={{ ...btn("primary"), flex: 1, fontSize: 13 }}>
+                            {g.homeScore !== undefined ? "Atualizar" : "Salvar Resultado"}
+                          </button>
+                          {g.homeScore !== undefined && (
+                            <button onClick={() => clearResult(g.id)} style={{
+                              padding: "11px 14px", borderRadius: 12, border: "1.5px solid #FECACA",
+                              background: "#FEF2F2", color: "#DC2626", fontSize: 12,
+                              fontWeight: 700, cursor: "pointer", flexShrink: 0,
+                              fontFamily: "'Inter',sans-serif",
+                            }}>
+                              🗑 Desfazer
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+                </div>
+                )}
               </div>
             )}
 
