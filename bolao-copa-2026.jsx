@@ -1602,7 +1602,7 @@ export default function BolaoApp() {
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         <button onClick={() => { const newPaid = !bet.paid; setDoc(doc(db, "bets", bet.id), { paid: newPaid }, { merge: true }).catch(() => setBets(prev => prev.map(b => b.id === bet.id ? { ...b, paid: newPaid } : b))); }}
                           style={{ ...btn(bet.paid ? "green" : "primary"), padding: "7px 14px", fontSize: 12 }}>
-                          {bet.paid ? "✓ Pago" : "Marcar como pago"}
+                          {bet.paid ? "✅ Pix recebido" : "⏳ Aguardando Pix"}
                         </button>
                         <button onClick={() => { if (window.confirm(`Excluir aposta de ${bet.name}?`)) { deleteDoc(doc(db, "bets", bet.id)).then(() => notify("Aposta removida.")).catch(() => { setBets(prev => prev.filter(b => b.id !== bet.id)); notify("Aposta removida."); }); } }}
                           style={{ ...btn("danger"), padding: "7px 14px", fontSize: 12 }}>🗑 Excluir</button>
@@ -1937,6 +1937,54 @@ export default function BolaoApp() {
               </div>
             )}
 
+            {/* ── Status de pagamento ── */}
+            {bets.length > 0 && (() => {
+              const pagos = bets.filter(b => b.paid).length;
+              const pendentes = bets.filter(b => !b.paid).length;
+              return (
+                <div style={{ padding: "12px 20px 0" }}>
+                  {/* Aviso de exclusão automática */}
+                  {pendentes > 0 && (
+                    <div style={{
+                      background: "#FEF2F2", border: "1px solid #FECACA",
+                      borderRadius: 14, padding: "12px 16px", marginBottom: 10,
+                      display: "flex", gap: 10, alignItems: "flex-start",
+                    }}>
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+                      <div>
+                        <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 13, color: "#DC2626", marginBottom: 2 }}>
+                          {pendentes} aposta{pendentes !== 1 ? "s" : ""} com Pix pendente
+                        </div>
+                        <div style={{ fontSize: 11, color: "#B91C1C", lineHeight: 1.5 }}>
+                          Apostas sem pagamento confirmado serão excluídas automaticamente no início de cada jogo. Faça o Pix antes do apito!
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Resumo pago/pendente */}
+                  <div style={{
+                    display: "flex", gap: 8, marginBottom: 4,
+                  }}>
+                    <div style={{
+                      flex: 1, background: "#F0FDF4", border: "1px solid #BBF7D0",
+                      borderRadius: 12, padding: "10px 14px", textAlign: "center",
+                    }}>
+                      <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 900, fontSize: 22, color: "#166534" }}>{pagos}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: "#166534", marginTop: 2 }}>✅ PIX RECEBIDO</div>
+                    </div>
+                    <div style={{
+                      flex: 1, background: pendentes > 0 ? "#FEF2F2" : "#F8FAFC",
+                      border: `1px solid ${pendentes > 0 ? "#FECACA" : "#E2E8F0"}`,
+                      borderRadius: 12, padding: "10px 14px", textAlign: "center",
+                    }}>
+                      <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 900, fontSize: 22, color: pendentes > 0 ? "#DC2626" : "#94A3B8" }}>{pendentes}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: pendentes > 0 ? "#DC2626" : "#94A3B8", marginTop: 2 }}>⏳ PENDENTE</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* ── Status de revelação (automático) ── */}
             {bets.length > 0 && (
               <div style={{ padding: "16px 20px 0" }}>
@@ -2040,12 +2088,21 @@ export default function BolaoApp() {
                                   background: isWinner ? "#F0FDF4" : "#FFFFFF",
                                 }}>
                                   <div style={{ flex: 1 }}>
-                                    <span style={{
-                                      fontFamily: "'Poppins',sans-serif", fontWeight: 700,
-                                      fontSize: 14, color: isWinner ? "#166534" : C.text,
-                                    }}>
-                                      {bet.name}
-                                    </span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{
+                                        fontFamily: "'Poppins',sans-serif", fontWeight: 700,
+                                        fontSize: 14, color: isWinner ? "#166534" : C.text,
+                                      }}>
+                                        {bet.name}
+                                      </span>
+                                      {!bet.paid && (
+                                        <span style={{
+                                          fontSize: 9, fontWeight: 800, color: "#DC2626",
+                                          background: "#FEF2F2", border: "1px solid #FECACA",
+                                          borderRadius: 20, padding: "2px 6px", letterSpacing: 0.3,
+                                        }}>PIX PENDENTE</span>
+                                      )}
+                                    </div>
                                   </div>
                                   <div style={{
                                     fontFamily: "'Poppins',sans-serif", fontWeight: 900,
