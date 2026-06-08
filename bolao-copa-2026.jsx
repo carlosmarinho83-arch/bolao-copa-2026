@@ -1289,8 +1289,6 @@ export default function BolaoApp() {
               </div>
             </div>
 
-            </div>
-
             {/* ── REGRAS BUTTON ── */}
             <div style={{ padding: "12px 20px 0" }}>
               <button
