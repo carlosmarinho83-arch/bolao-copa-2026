@@ -1986,7 +1986,7 @@ export default function BolaoApp() {
                       fontSize: 10, fontWeight: 700,
                       color: "rgba(255,255,255,0.45)", marginTop: 2,
                     }}>
-                      para quem acertar
+                      Dividido entre os acertadores
                     </div>
                   </div>
                 </div>
