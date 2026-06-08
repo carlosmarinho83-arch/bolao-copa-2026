@@ -1289,9 +1289,10 @@ export default function BolaoApp() {
               </div>
             </div>
 
-              {/* ── REGRAS BUTTON ── */}
             </div>
-            <div style={{ padding: "16px 20px 0" }}>
+
+            {/* ── REGRAS BUTTON ── */}
+            <div style={{ padding: "12px 20px 0" }}>
               <button
                 onClick={() => setShowRules(true)}
                 style={{
@@ -1304,6 +1305,7 @@ export default function BolaoApp() {
               >
                 Regras do Jogo
               </button>
+            </div>
 
             {/* ── CENTRO AO VIVO ── */}
             <CentroAoVivo
