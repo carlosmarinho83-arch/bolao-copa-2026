@@ -1203,13 +1203,14 @@ export default function BolaoApp() {
           <button
             onClick={() => setShowRules(true)}
             style={{
-              padding: "8px 14px", borderRadius: 20, border: "none",
+              width: 36, height: 36, borderRadius: "50%", border: "none",
               background: C.yellow, color: C.greenDark,
-              fontSize: 12, fontWeight: 800, cursor: "pointer",
-              fontFamily: "'Poppins',sans-serif", letterSpacing: 0.3,
-              marginLeft: 4, whiteSpace: "nowrap",
+              fontSize: 18, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginLeft: 4, flexShrink: 0,
             }}
-          >📋 Regras</button>
+            title="Regras do Jogo"
+          >📋</button>
         </div>
       </header>
 
