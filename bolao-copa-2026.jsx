@@ -926,8 +926,6 @@ export default function BolaoApp() {
     const unsub = onSnapshot(collection(db, "games"), (snap) => {
       if (snap.empty) return;
       const savedGames = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Mescla com DEFAULT_GAMES para preservar kickoff e outros campos
-      // null do Firestore = resultado removido, trata como undefined
       setGames(DEFAULT_GAMES.map(def => {
         const saved = savedGames.find(s => s.id === def.id);
         if (!saved || saved.homeScore === null || saved.homeScore === undefined) return def;
@@ -935,6 +933,33 @@ export default function BolaoApp() {
       }));
     }, (err) => {
       console.error("Firebase games error:", err);
+    });
+    return () => unsub();
+  }, []);
+
+  // ── Firebase: listener ao vivo (alimentado pelo Cloudflare Worker) ─────────
+  useEffect(() => {
+    const { doc: fsDoc, onSnapshot: fsOnSnapshot } = { doc, onSnapshot };
+    const unsub = onSnapshot(doc(db, "live", "current"), (snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      if (!d?.active) { setLiveData(null); return; }
+      setLiveData({
+        active:         d.active,
+        gameId:         d.gameId,
+        homeScore:      d.homeScore ?? 0,
+        awayScore:      d.awayScore ?? 0,
+        minute:         d.minute ?? 0,
+        status:         d.status,
+        homeName:       d.homeName || "Brasil",
+        awayName:       d.awayName || "Marrocos",
+        homeFlagEmoji:  FLAGS[d.homeName] || "🇧🇷",
+        awayFlagEmoji:  FLAGS[d.awayName] || "🏳️",
+        competition:    "FIFA World Cup 2026 · Grupo C",
+        events:         d.events ? JSON.parse(d.events) : [],
+      });
+    }, (err) => {
+      console.error("Firebase live error:", err);
     });
     return () => unsub();
   }, []);
