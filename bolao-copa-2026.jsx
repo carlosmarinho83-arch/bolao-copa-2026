@@ -69,11 +69,14 @@ const OFFICIAL_IDS = ["g1", "g2", "g3"];
 function loadGames() {
   // Sempre retorna apenas os 3 jogos oficiais do DEFAULT_GAMES,
   // mas preserva resultados (homeScore/awayScore) se já foram cadastrados
+  // — nunca antes do horário real do jogo (mesma trava do listener do Firestore).
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_GAMES) || "[]");
     return DEFAULT_GAMES.map(def => {
       const existing = saved.find(s => s.id === def.id);
-      return existing ? { ...def, homeScore: existing.homeScore, awayScore: existing.awayScore } : def;
+      if (!existing || existing.homeScore === undefined || existing.homeScore === null) return def;
+      if (def.kickoff && Date.now() < def.kickoff) return def;
+      return { ...def, homeScore: existing.homeScore, awayScore: existing.awayScore };
     });
   } catch { return DEFAULT_GAMES; }
 }
@@ -934,6 +937,13 @@ export default function BolaoApp() {
       setGames(DEFAULT_GAMES.map(def => {
         const saved = savedGames.find(s => s.id === def.id);
         if (!saved || saved.homeScore === null || saved.homeScore === undefined) return def;
+        // ── TRAVA DE SEGURANÇA ──────────────────────────────────────────────
+        // Nunca aceita um resultado/placar para um jogo antes do horário real
+        // dele (def.kickoff). Protege contra Worker com fixture ID errado,
+        // resultado salvo por engano no Admin, ou qualquer dado inconsistente
+        // no Firestore: enquanto o jogo não começou de fato, ele simplesmente
+        // não tem placar nem status — ponto final, independente do que está salvo.
+        if (def.kickoff && Date.now() < def.kickoff) return def;
         return { ...def, homeScore: saved.homeScore, awayScore: saved.awayScore };
       }));
     }, (err) => {
