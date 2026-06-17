@@ -2093,9 +2093,12 @@ export default function BolaoApp() {
             })()}
 
             {/* ── Status de revelação (automático) ── */}
-            {bets.length > 0 && (
+            {/* Considera só o(s) jogo(s) abertos pra aposta agora — não conta jogos antigos já encerrados */}
+            {(() => {
+              const jogoAtualRevelado = jogosAbertos.length > 0 && jogosAbertos.some(g => isGameRevealed(g));
+              return apostasAtuais.length > 0 && (
               <div style={{ padding: "16px 20px 0" }}>
-                {!betsRevealed ? (
+                {!jogoAtualRevelado ? (
                   <div style={{
                     background: "#1E293B", borderRadius: 18,
                     padding: "16px 18px",
@@ -2135,7 +2138,8 @@ export default function BolaoApp() {
                   </div>
                 )}
               </div>
-            )}
+              );
+            })()}
 
             {/* Lista de apostas por jogo */}
             {bets.length > 0 && (
