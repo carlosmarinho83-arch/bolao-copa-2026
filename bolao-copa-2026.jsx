@@ -1963,7 +1963,14 @@ export default function BolaoApp() {
             )}          </div>
         )}
         {/* ── PAINEL DE APOSTAS (público) ──────────────────────────────────── */}
-        {view === "panel" && (
+        {view === "panel" && (() => {
+          // Considera só o(s) jogo(s) abertos para aposta agora — jogos já encerrados
+          // (com prêmio pago) não entram mais nesse painel, só na lista histórica abaixo.
+          const jogosAbertos = games.filter(g => getGameStatus(g.id) === "open");
+          const apostasAtuais = jogosAbertos.length
+            ? bets.filter(b => jogosAbertos.some(g => b.scores?.[g.id]?.home !== undefined))
+            : [];
+          return (
           <div style={{ animation: "fadeIn 0.3s ease", padding: "0 0 40px" }}>
 
             {/* Header */}
@@ -1981,11 +1988,11 @@ export default function BolaoApp() {
                 Painel de Apostas
               </h1>
               <p style={{ fontSize: 13, color: C.muted, fontWeight: 400, marginTop: 4 }}>
-                {bets.length} aposta{bets.length !== 1 ? "s" : ""} · R$5 por palpite
+                {apostasAtuais.length} aposta{apostasAtuais.length !== 1 ? "s" : ""} · R$5 por palpite
               </p>
 
               {/* Prize highlight card */}
-              {bets.length > 0 && (
+              {apostasAtuais.length > 0 && (
                 <div style={{
                   marginTop: 18,
                   background: "linear-gradient(135deg, #166534 0%, #14532D 100%)",
@@ -1998,17 +2005,17 @@ export default function BolaoApp() {
                       fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.55)",
                       letterSpacing: 1.5, marginBottom: 4,
                     }}>
-                      🏆 ARRECADADO NA COPA (TODOS OS JOGOS)
+                      🏆 PRÊMIO DESTE JOGO
                     </div>
                     <div style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 900,
                       fontSize: 38, color: "#FACC15", lineHeight: 1,
                       letterSpacing: -1,
                     }}>
-                      R$ {bets.length * 5}<span style={{ fontSize: 22 }}>,00</span>
+                      R$ {apostasAtuais.length * 5}<span style={{ fontSize: 22 }}>,00</span>
                     </div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 5 }}>
-                      {bets.length} palpite{bets.length !== 1 ? "s" : ""} × R$5,00
+                      {apostasAtuais.length} palpite{apostasAtuais.length !== 1 ? "s" : ""} × R$5,00
                     </div>
                   </div>
                   <div style={{ textAlign: "center" }}>
@@ -2025,7 +2032,7 @@ export default function BolaoApp() {
             </div>
 
             {/* Empty state */}
-            {bets.length === 0 && (
+            {apostasAtuais.length === 0 && (
               <div style={{ margin: "32px 20px 0", textAlign: "center",
                 padding: "48px 24px", background: C.surface,
                 borderRadius: 20, border: `1.5px solid ${C.border}` }}>
@@ -2038,9 +2045,9 @@ export default function BolaoApp() {
             )}
 
             {/* ── Status de pagamento ── */}
-            {bets.length > 0 && (() => {
-              const pagos = bets.filter(b => b.paid).length;
-              const pendentes = bets.filter(b => !b.paid).length;
+            {apostasAtuais.length > 0 && (() => {
+              const pagos = apostasAtuais.filter(b => b.paid).length;
+              const pendentes = apostasAtuais.filter(b => !b.paid).length;
               return (
                 <div style={{ padding: "12px 20px 0" }}>
                   {/* Aviso de exclusão automática */}
@@ -2255,9 +2262,9 @@ export default function BolaoApp() {
             )}
 
           </div>
-        )}
+          );
+        })()}
 
-      {/* ── RULES MODAL ── */}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
 
       {/* ── SEGREDO MODAL ── */}
