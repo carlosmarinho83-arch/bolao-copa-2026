@@ -610,9 +610,14 @@ function CentroAoVivo({ liveData, bets, games, calcSituacaoAoVivo }) {
     sem:      "Sem palpite neste jogo",
   };
 
+  // Apenas apostadores que deram palpite NESTE jogo (não soma com outros jogos)
+  const apostasDoJogoAtual = hasLive
+    ? bets.filter(b => b.scores?.[liveData.gameId]?.home !== undefined)
+    : [];
+
   // Calcular situação ao vivo de cada apostador
   const apostadoresVivos = hasLive
-    ? bets.map(b => ({
+    ? apostasDoJogoAtual.map(b => ({
         ...b,
         sit: calcSituacaoAoVivo(b, liveData.gameId, liveData.homeScore, liveData.awayScore),
       })).sort((a, b) => {
@@ -622,7 +627,7 @@ function CentroAoVivo({ liveData, bets, games, calcSituacaoAoVivo }) {
     : [];
 
   const vencedoresAtuais = apostadoresVivos.filter(b => b.sit === "exato");
-  const premio = bets.length * 5;
+  const premio = apostasDoJogoAtual.length * 5;
 
   if (!hasLive) {
     return (
@@ -1647,7 +1652,7 @@ export default function BolaoApp() {
                           return (
                             <div key={g.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "3px 0", borderBottom: "1px solid #1B5E2011" }}>
                               <span style={{ color: "#4A4A4A" }}>{FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}</span>
-                              <span style={{ color: exact ? "#F8B602" : winner ? "#81C784" : s?.home !== undefined ? "#81C784" : "#1B5E20", fontWeight: exact || winner ? 700 : 400, filter: betsRevealed ? "none" : "blur(5px)", userSelect: betsRevealed ? "auto" : "none" }}>
+                              <span style={{ color: exact ? "#F8B602" : winner ? "#81C784" : s?.home !== undefined ? "#81C784" : "#1B5E20", fontWeight: exact || winner ? 700 : 400, filter: (isGameRevealed(g) || hasResult) ? "none" : "blur(5px)", userSelect: (isGameRevealed(g) || hasResult) ? "auto" : "none" }}>
                                 {s?.home !== undefined ? `${s.home}–${s.away}${exact ? " ⭐" : winner ? " ✓" : ""}` : "—"}
                               </span>
                             </div>
@@ -1708,6 +1713,7 @@ export default function BolaoApp() {
                         <div style={{ fontSize: 11, color: "#4A4A4A" }}>{g.date} · {g.stadium}</div>
                       </div>
                       {g.homeScore !== undefined && <Badge color="#4CAF50">{g.homeScore}–{g.awayScore}</Badge>}
+                      {g.homeScore !== undefined && <Badge color="#166534">Finalizado</Badge>}
                       <button onClick={() => deleteGame(g.id)} style={{ ...btn("danger"), padding: "6px 10px", fontSize: 12 }}>🗑</button>
                     </div>
                   ))}
@@ -1992,7 +1998,7 @@ export default function BolaoApp() {
                       fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.55)",
                       letterSpacing: 1.5, marginBottom: 4,
                     }}>
-                      🏆 PRÊMIO TOTAL
+                      🏆 ARRECADADO NA COPA (TODOS OS JOGOS)
                     </div>
                     <div style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 900,
@@ -2129,6 +2135,7 @@ export default function BolaoApp() {
               <div style={{ padding: "20px 20px 0", display: "flex", flexDirection: "column", gap: 20 }}>
                 {games.map(g => {
                   const apostasJogo = bets.filter(b => b.scores?.[g.id]?.home !== undefined);
+                  const premioJogo = apostasJogo.length * 5;
                   const adversario = g.home === "Brasil" ? g.away : g.home;
                   const done = g.homeScore !== undefined;
                   const vencedores = done ? apostasJogo.filter(b => {
@@ -2144,7 +2151,15 @@ export default function BolaoApp() {
                           <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text }}>
                             🇧🇷 Brasil × {FLAGS[adversario] || ""} {adversario}
                           </div>
-                          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{g.date}</div>
+                          <div style={{ fontSize: 11, color: C.muted, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
+                            <span>{g.date}</span>
+                            {apostasJogo.length > 0 && (
+                              <span style={{
+                                background: "#F0FDF4", color: "#166534",
+                                fontWeight: 700, borderRadius: 20, padding: "1px 8px",
+                              }}>💰 R${premioJogo}</span>
+                            )}
+                          </div>
                         </div>
                         {done && (
                           <div style={{
@@ -2171,7 +2186,7 @@ export default function BolaoApp() {
                             const brS = g.home === "Brasil" ? s.home : s.away;
                             const adS = g.home === "Brasil" ? s.away : s.home;
                             const isWinner = done && s.home === g.homeScore && s.away === g.awayScore;
-                            const revealed = betsRevealed || done;
+                            const revealed = isGameRevealed(g) || done;
 
                             return (
                               <div key={bet.id}>
@@ -2227,8 +2242,8 @@ export default function BolaoApp() {
                         }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>
                             🏆 {vencedores.length === 1
-                              ? `${vencedores[0].name} acertou! Ganha R$${bets.length * 5}`
-                              : `${vencedores.map(v => v.name).join(", ")} acertaram! Dividem R$${bets.length * 5} (R$${Math.round((bets.length * 5) / vencedores.length)} cada)`
+                              ? `${vencedores[0].name} acertou! Ganha R$${premioJogo}`
+                              : `${vencedores.map(v => v.name).join(", ")} acertaram! Dividem R$${premioJogo} (R$${Math.round(premioJogo / vencedores.length)} cada)`
                             }
                           </div>
                         </div>
