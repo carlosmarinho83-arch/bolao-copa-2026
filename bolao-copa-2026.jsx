@@ -2186,6 +2186,28 @@ export default function BolaoApp() {
                         <div style={{ fontSize: 12, color: C.muted, padding: "10px 0 4px", fontStyle: "italic" }}>
                           Ninguém apostou neste jogo ainda.
                         </div>
+                      ) : done ? (
+                        <div style={{
+                          background: "#FFFFFF", borderRadius: 16,
+                          border: `1.5px solid ${C.border}`,
+                          padding: "14px 16px",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{
+                              fontSize: 11, fontWeight: 800, color: "#166534",
+                              background: "#F0FDF4", border: "1px solid #BBF7D0",
+                              borderRadius: 20, padding: "3px 10px", letterSpacing: 0.3,
+                            }}>🏁 JOGO ENCERRADO</span>
+                            <span style={{ fontSize: 12, color: C.muted }}>
+                              {apostasJogo.length} palpite{apostasJogo.length !== 1 ? "s" : ""} · R${premioJogo} arrecadado
+                            </span>
+                          </div>
+                          {vencedores.length === 0 && (
+                            <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic", marginTop: 8 }}>
+                              Ninguém acertou o placar exato neste jogo.
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <div style={{
                           background: "#FFFFFF", borderRadius: 16,
