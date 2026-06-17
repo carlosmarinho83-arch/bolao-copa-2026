@@ -1640,9 +1640,14 @@ export default function BolaoApp() {
                   <option value="all">Todos os jogos</option>
                   {games.map(g => <option key={g.id} value={g.id}>{FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}</option>)}
                 </select>
-                {bets.length === 0
-                  ? <div style={{ textAlign: "center", padding: 32, color: "#4A4A4A", background: "#FFFFFF", borderRadius: 16 }}>Nenhuma aposta registrada.</div>
-                  : bets.map(bet => (
+                {(() => {
+                  // Filtra a lista de apostadores pelo jogo escolhido — só quem deu palpite NAQUELE jogo aparece.
+                  const betsFiltradas = filterGame === "all"
+                    ? bets
+                    : bets.filter(b => b.scores?.[filterGame]?.home !== undefined);
+                  return betsFiltradas.length === 0
+                  ? <div style={{ textAlign: "center", padding: 32, color: "#4A4A4A", background: "#FFFFFF", borderRadius: 16 }}>Nenhuma aposta registrada para esse jogo.</div>
+                  : betsFiltradas.map(bet => (
                     <div key={bet.id} style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 14, padding: 16, marginBottom: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                         <div>
@@ -1678,8 +1683,8 @@ export default function BolaoApp() {
                           style={{ ...btn("danger"), padding: "7px 14px", fontSize: 12 }}>🗑 Excluir</button>
                       </div>
                     </div>
-                  ))
-                }
+                  ));
+                })()}
               </div>
             )}
 
