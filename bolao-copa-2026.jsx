@@ -111,12 +111,17 @@ function isBrasilLosing(game, homeScore, awayScore) {
 
 // ─── ScoreInput ───────────────────────────────────────────────────────────────
 function ScoreInput({ value, onChange, disabled, fullWidth }) {
+  const nums = [0,1,2,3,4,5,6,7,8,9];
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, width: fullWidth ? "100%" : "auto" }}>
-      {[0,1,2,3,4,5].map(n => (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: fullWidth ? "repeat(5, 1fr)" : `repeat(${nums.length}, 40px)`,
+      gap: 6,
+      width: fullWidth ? "100%" : "auto",
+    }}>
+      {nums.map(n => (
         <button key={n} onClick={() => !disabled && onChange(n)}
           style={{
-            flex: fullWidth ? 1 : "none",
             width: fullWidth ? undefined : 40,
             height: 44, borderRadius: 10,
             background: value === n ? "#1B5E20" : "#F0F7F0",
