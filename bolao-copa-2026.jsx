@@ -307,7 +307,7 @@ function PixModal({ betName, amount, onConfirm, onClose }) {
             Quase lá, {betName}!
           </div>
           <div style={{ fontSize: 14, color: "#64748B", marginTop: 6, lineHeight: 1.5 }}>
-            Para confirmar sua aposta, faça o Pix e envie o comprovante.
+            Seu{amount / 5 !== 1 ? "s" : ""} palpite{amount / 5 !== 1 ? "s" : ""} já {amount / 5 !== 1 ? "foram registrados" : "foi registrado"}. Agora falta só o Pix pra valer.
           </div>
         </div>
 
@@ -1001,6 +1001,7 @@ export default function BolaoApp() {
   const [betScores, setBetScores] = useState({});
   const [betStep, setBetStep] = useState(0);
   const [brasilWarning, setBrasilWarning] = useState(null);
+  const [sessionPalpites, setSessionPalpites] = useState([]); // palpites já registrados nesta sessão (antes de finalizar)
 
   const [adminTab, setAdminTab] = useState("bets");
   const [filterGame, setFilterGame] = useState("all");
@@ -1053,18 +1054,12 @@ export default function BolaoApp() {
     setBetScores(prev => ({ ...prev, [gameId]: { ...prev[gameId], [side]: val } }));
   }
 
-  function submitBet() {
+  // Confirmar Aposta agora REGISTRA o palpite de imediato — não depende do botão "Já fiz o Pix".
+  async function confirmarPalpite() {
     if (!betName.trim()) { notify("Informe seu nome!", "error"); return; }
-    // Count how many games have palpites
-    const numPalpites = Object.keys(betScores).filter(id => betScores[id]?.home !== undefined && betScores[id]?.away !== undefined).length;
-    if (numPalpites === 0) { notify("Escolha pelo menos um placar!", "error"); return; }
-    // Show Pix modal before saving
-    setPixBetName(betName.trim());
-    setPixAmount(numPalpites * 5);
-    setShowPixModal(true);
-  }
+    const palpitesValidos = Object.entries(betScores).filter(([id, s]) => s?.home !== undefined && s?.away !== undefined);
+    if (palpitesValidos.length === 0) { notify("Escolha pelo menos um placar!", "error"); return; }
 
-  async function confirmBetAfterPix() {
     const id = generateId();
     const newBet = {
       name: betName.trim(), phone: betPhone.trim(),
@@ -1072,14 +1067,21 @@ export default function BolaoApp() {
     };
     try {
       await setDoc(doc(db, "bets", id), newBet);
-      notify(`Aposta de ${betName} registrada! ⚽🇧🇷`);
     } catch (err) {
       console.error("Erro ao salvar aposta:", err);
-      // Fallback local
       setBets(prev => [...prev, { id, ...newBet }]);
-      notify(`Aposta registrada localmente. ⚽`);
     }
-    setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0);
+    notify(`Palpite de ${betName.trim()} registrado! ⚽`);
+    setSessionPalpites(prev => [...prev, ...palpitesValidos.map(([gid, s]) => ({ gameId: gid, home: s.home, away: s.away }))]);
+    setBetScores({});
+    setBetStep(3);
+  }
+
+  // Encerra a sessão depois de "Finalizar e ver Pix" → "Já fiz o Pix!" — só fecha tudo,
+  // pois cada palpite já foi salvo individualmente no momento em que foi confirmado.
+  function finalizarSessao() {
+    notify(`Apostas de ${betName.trim()} registradas! Boa sorte 🍀⚽`);
+    setBetName(""); setBetPhone(""); setBetScores({}); setSessionPalpites([]); setBetStep(0);
     setShowPixModal(false);
     setView("home");
   }
@@ -1272,13 +1274,35 @@ export default function BolaoApp() {
                 color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
               }}>EUA • México • Canadá</p>
 
-              {/* Stat mini cards */}
+              {/* Stat mini cards — agora refletem o jogo aberto agora, não a Copa inteira */}
+              {(() => {
+                const jogoAtual = games.find(g => getGameStatus(g.id) === "open");
+                const apostasJogoAtual = jogoAtual ? bets.filter(b => b.scores?.[jogoAtual.id]?.home !== undefined) : [];
+                const premioJogoAtual = apostasJogoAtual.length * 5;
+
+                // Último jogo já encerrado (o de kickoff mais recente entre os que têm placar)
+                const jogosEncerrados = games.filter(g => g.homeScore !== undefined).sort((a, b) => b.kickoff - a.kickoff);
+                const ultimo = jogosEncerrados[0];
+                let nomeVal = "—", labelResultado = "Aguardando 1º resultado";
+                if (ultimo) {
+                  const adv = ultimo.home === "Brasil" ? ultimo.away : ultimo.home;
+                  const ws = bets.filter(b => {
+                    const s = b.scores?.[ultimo.id];
+                    return s && s.home === ultimo.homeScore && s.away === ultimo.awayScore;
+                  });
+                  nomeVal = ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—";
+                  labelResultado = `🇧🇷 ${ultimo.homeScore}×${ultimo.awayScore} ${FLAGS[adv] || ""} ${adv}`;
+                }
+
+                const cards = [
+                  { icon: "👥", val: apostasJogoAtual.length, label: "Apostadores", big: true },
+                  { icon: "💰", val: `R$${premioJogoAtual}`, label: "Prêmio do jogo", big: true },
+                  { icon: "🏆", val: nomeVal, label: labelResultado, big: nomeVal.length <= 9 },
+                ];
+
+                return (
               <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
-                {[
-                  ["👥", bets.length, "Apostadores"],
-                  ["⚽", games.length, "Jogos"],
-                  ["🏆", (() => { const ws = bets.filter(b => games.some(g => g.homeScore !== undefined && b.scores?.[g.id]?.home === g.homeScore && b.scores?.[g.id]?.away === g.awayScore)); return ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—"; })(), "Campeão"],
-                ].map(([icon, val, label]) => (
+                {cards.map(({ icon, val, label, big }) => (
                   <div key={label} style={{
                     flex: 1, background: "rgba(255,255,255,0.08)",
                     borderRadius: 16, padding: "12px 6px",
@@ -1287,13 +1311,15 @@ export default function BolaoApp() {
                     <span style={{ fontSize: 16 }}>{icon}</span>
                     <span style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 800,
-                      fontSize: typeof val === "number" ? 22 : 14,
+                      fontSize: big ? 20 : 13,
                       color: C.yellow, lineHeight: 1,
                     }}>{val}</span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 0.5 }}>{label}</span>
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 0.5, textAlign: "center" }}>{label}</span>
                   </div>
                 ))}
               </div>
+                );
+              })()}
 
               {/* CTA */}
               <div style={{ display: "flex", justifyContent: "center" }}>
@@ -1451,7 +1477,7 @@ export default function BolaoApp() {
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, letterSpacing: 2, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>Casa do Kaká</div>
               <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, color: C.text, fontSize: 26, lineHeight: 1.1 }}>
-                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : "Confirmar Aposta"}
+                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : betStep === 2 ? "Confirmar Aposta" : "Palpite Registrado! ✅"}
               </h2>
             </div>
 
@@ -1576,7 +1602,52 @@ export default function BolaoApp() {
 
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setBetStep(1)} style={{ ...btn(), padding: "11px 16px" }}>←</button>
-                  <button onClick={submitBet} style={{ ...btn("primary"), flex: 1, fontSize: 16 }}>✅ Confirmar Aposta!</button>
+                  <button onClick={confirmarPalpite} style={{ ...btn("primary"), flex: 1, fontSize: 16 }}>✅ Confirmar Aposta!</button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Palpite registrado — pode dar outro ou finalizar e ver o Pix */}
+            {betStep === 3 && (
+              <div>
+                <div style={{
+                  background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderRadius: 16,
+                  padding: "18px 16px", textAlign: "center", marginBottom: 16,
+                }}>
+                  <div style={{ fontSize: 32, marginBottom: 6 }}>✅</div>
+                  <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 16, color: "#166534" }}>
+                    Palpite registrado, {betName.trim()}!
+                  </div>
+                  <div style={{ fontSize: 12, color: "#15803D", marginTop: 4 }}>
+                    Quer dar outro palpite? Não precisa repetir seus dados.
+                  </div>
+                </div>
+
+                <div style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 16, padding: 18, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 2, color: "#F8B602", marginBottom: 10 }}>SEUS PALPITES NESTA SESSÃO</div>
+                  {sessionPalpites.map((p, i) => {
+                    const g = games.find(gm => gm.id === p.gameId);
+                    return (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #1B5E2011" }}>
+                        <span style={{ fontSize: 12, color: "#555555" }}>{g ? `${FLAGS[g.home]} ${g.home} × ${g.away} ${FLAGS[g.away]}` : p.gameId}</span>
+                        <span style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 16, color: "#F8B602" }}>{p.home} — {p.away}</span>
+                      </div>
+                    );
+                  })}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: "1px solid #E0E0E0" }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#111111" }}>Total ({sessionPalpites.length} palpite{sessionPalpites.length !== 1 ? "s" : ""})</span>
+                    <span style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 18, color: "#166534" }}>R$ {sessionPalpites.length * 5},00</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button onClick={() => setBetStep(1)} style={{ ...btn(), fontSize: 14 }}>+ Dar outro palpite</button>
+                  <button
+                    onClick={() => { setPixBetName(betName.trim()); setPixAmount(sessionPalpites.length * 5); setShowPixModal(true); }}
+                    style={{ ...btn("primary"), fontSize: 16 }}
+                  >
+                    💸 Finalizar — Ver Pix (R${sessionPalpites.length * 5})
+                  </button>
                 </div>
               </div>
             )}
@@ -2316,7 +2387,7 @@ export default function BolaoApp() {
         <PixModal
           betName={pixBetName}
           amount={pixAmount}
-          onConfirm={confirmBetAfterPix}
+          onConfirm={finalizarSessao}
           onClose={() => setShowPixModal(false)}
         />
       )}
