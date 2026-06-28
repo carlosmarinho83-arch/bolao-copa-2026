@@ -42,6 +42,7 @@ const DEFAULT_GAMES = [
   { id: "g1", group: "C", home: "Brasil", away: "Marrocos",  date: "13/06 (Sáb) · 19h BRT",    stadium: "MetLife Stadium, Nova Jersey",          kickoff: new Date("2026-06-13T22:00:00Z").getTime() },
   { id: "g2", group: "C", home: "Brasil", away: "Haiti",     date: "19/06 (Sex) · 21h30 BRT",  stadium: "Lincoln Financial Field, Filadélfia",   kickoff: new Date("2026-06-20T00:30:00Z").getTime() },
   { id: "g3", group: "C", home: "Escócia", away: "Brasil",   date: "24/06 (Qua) · 19h BRT",    stadium: "Hard Rock Stadium, Miami",              kickoff: new Date("2026-06-24T22:00:00Z").getTime() },
+  { id: "g4", group: "Oitavas de Final", home: "Brasil", away: "Japão", date: "29/06 (Seg) · 14h BRT", stadium: "Estádio a confirmar", kickoff: new Date("2026-06-29T17:00:00Z").getTime() },
 ];
 
 // Um jogo está revelado se o horário de início já passou
@@ -65,7 +66,7 @@ function saveToStorage(key, data) {
 function generateId() { return Math.random().toString(36).substr(2, 9); }
 
 // ── Garante que só os 3 jogos oficiais existam ──────────────────────────────
-const OFFICIAL_IDS = ["g1", "g2", "g3"];
+const OFFICIAL_IDS = ["g1", "g2", "g3", "g4"];
 function loadGames() {
   // Sempre retorna apenas os 3 jogos oficiais do DEFAULT_GAMES,
   // mas preserva resultados (homeScore/awayScore) se já foram cadastrados
@@ -424,6 +425,12 @@ function RulesModal({ onClose }) {
       title: "FECHAMENTO AUTOMÁTICO",
       text: "As apostas encerram automaticamente no horário oficial do jogo.",
       highlight: "Não serão aceitas exceções.",
+    },
+    {
+      icon: "🕐",
+      title: "VALE SÓ O TEMPO NORMAL",
+      text: "O placar do seu palpite é comparado apenas com o resultado dos 90 minutos (tempo normal).",
+      highlight: "Prorrogação e pênaltis NÃO entram na contagem.",
     },
     {
       icon: "📲",
@@ -1488,12 +1495,22 @@ export default function BolaoApp() {
 
             {/* Regra Brasil banner */}
             <div style={{
-              background: C.green, borderRadius: 16, padding: "12px 16px", marginBottom: 20,
+              background: C.green, borderRadius: 16, padding: "12px 16px", marginBottom: 10,
               fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 500, lineHeight: 1.5,
               display: "flex", alignItems: "center", gap: 8,
             }}>
               <span style={{ fontSize: 18 }}>🇧🇷</span>
               <em>Regra da Casa: aqui não tem vez pra secador.</em>
+            </div>
+
+            {/* Aviso: vale só tempo normal */}
+            <div style={{
+              background: "#FFF7E6", border: "1px solid #F8B60255", borderRadius: 16, padding: "10px 16px", marginBottom: 20,
+              fontSize: 11.5, color: "#92400E", fontWeight: 600, lineHeight: 1.5,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{ fontSize: 16 }}>🕐</span>
+              <span>Seu palpite vale só pelo <strong>tempo normal (90 min)</strong>. Prorrogação e pênaltis não contam.</span>
             </div>
 
             {/* Progress */}
