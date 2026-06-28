@@ -42,7 +42,7 @@ const DEFAULT_GAMES = [
   { id: "g1", group: "C", home: "Brasil", away: "Marrocos",  date: "13/06 (Sáb) · 19h BRT",    stadium: "MetLife Stadium, Nova Jersey",          kickoff: new Date("2026-06-13T22:00:00Z").getTime() },
   { id: "g2", group: "C", home: "Brasil", away: "Haiti",     date: "19/06 (Sex) · 21h30 BRT",  stadium: "Lincoln Financial Field, Filadélfia",   kickoff: new Date("2026-06-20T00:30:00Z").getTime() },
   { id: "g3", group: "C", home: "Escócia", away: "Brasil",   date: "24/06 (Qua) · 19h BRT",    stadium: "Hard Rock Stadium, Miami",              kickoff: new Date("2026-06-24T22:00:00Z").getTime() },
-  { id: "g4", group: "Oitavas de Final", home: "Brasil", away: "Japão", date: "29/06 (Seg) · 14h BRT", stadium: "Estádio a confirmar", kickoff: new Date("2026-06-29T17:00:00Z").getTime() },
+  { id: "g4", group: "Oitavas de Final", home: "Brasil", away: "Japão", date: "29/06 (Seg) · 14h BRT", stadium: "NRG Stadium, Houston", kickoff: new Date("2026-06-29T17:00:00Z").getTime() },
 ];
 
 // Um jogo está revelado se o horário de início já passou
