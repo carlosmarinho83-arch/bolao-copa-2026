@@ -1402,7 +1402,6 @@ export default function BolaoApp() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {games.map((g, i) => {
                   const status = getGameStatus(g.id);
-                  if (status === "hidden") return null;
                   const locked = status === "locked";
                   const done = g.homeScore !== undefined;
                   const brScore = g.home === "Brasil" ? g.homeScore : g.awayScore;
@@ -1470,8 +1469,11 @@ export default function BolaoApp() {
                               {win ? "Vitória" : draw ? "Empate" : "Derrota"}
                             </span>
                           )}
-                          {!done && !locked && (
+                          {!done && status === "open" && (
                             <span style={{ fontSize: 10, fontWeight: 600, color: C.green, background: "#DCFCE7", padding: "2px 9px", borderRadius: 20 }}>Aberto</span>
+                          )}
+                          {!done && status === "hidden" && (
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#92400E", background: "#FEF9C3", padding: "2px 9px", borderRadius: 20 }}>⏳ Aguardando resultado</span>
                           )}
                         </div>
                       </div>
