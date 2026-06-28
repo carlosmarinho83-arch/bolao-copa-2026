@@ -89,7 +89,8 @@ function loadGames() {
 const GAME_RULES = {
   g1: { openFrom: null,          hideFrom: new Date("2026-06-14T00:00:00-03:00") },
   g2: { openFrom: new Date("2026-06-14T00:00:00-03:00"), hideFrom: new Date("2026-06-20T00:00:00-03:00") },
-  g3: { openFrom: new Date("2026-06-20T00:00:00-03:00"), hideFrom: null },
+  g3: { openFrom: new Date("2026-06-20T00:00:00-03:00"), hideFrom: new Date("2026-06-25T00:00:00-03:00") },
+  g4: { openFrom: new Date("2026-06-25T00:00:00-03:00"), hideFrom: null },
 };
 function getGameStatus(gameId) {
   const now = new Date();
