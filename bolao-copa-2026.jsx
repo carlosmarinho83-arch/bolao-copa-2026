@@ -1395,12 +1395,10 @@ export default function BolaoApp() {
 
             {/* ── JOGOS DO BRASIL ── */}
             <div style={{ padding: "28px 20px 0" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text }}>🇧🇷 Jogos do Brasil</h2>
-                <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, background: C.border, borderRadius: 20, padding: "3px 10px" }}>Grupo C</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {games.map((g, i) => {
+              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 14 }}>🇧🇷 Jogos do Brasil</h2>
+
+              {(() => {
+                const renderCard = (g, i) => {
                   const status = getGameStatus(g.id);
                   const locked = status === "locked";
                   const done = g.homeScore !== undefined;
@@ -1479,8 +1477,37 @@ export default function BolaoApp() {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                };
+
+                // Mata-mata (qualquer fase que não seja a fase de grupos "C") sempre aparece primeiro e separado.
+                const mataMata   = games.filter(g => g.group !== "C");
+                const faseGrupos = games.filter(g => g.group === "C");
+
+                return (
+                  <>
+                    {mataMata.length > 0 && (
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: "#92400E", letterSpacing: 1 }}>🏆 MATA-MATA</span>
+                          <span style={{ fontSize: 10, color: "#92400E", fontWeight: 700, background: "#FEF3C7", borderRadius: 20, padding: "3px 10px" }}>{mataMata[0].group}</span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                          {mataMata.map((g, i) => renderCard(g, i))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>FASE DE GRUPOS</span>
+                        <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, background: C.border, borderRadius: 20, padding: "3px 10px" }}>Grupo C</span>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {faseGrupos.map((g, i) => renderCard(g, i))}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
 
