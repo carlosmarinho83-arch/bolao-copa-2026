@@ -35,14 +35,15 @@ const FLAGS = {
   Portugal: "🇵🇹", Uruguai: "🇺🇾", Canadá: "🇨🇦", Marrocos: "🇲🇦",
   Holanda: "🇳🇱", Senegal: "🇸🇳", EUA: "🇺🇸", Catar: "🇶🇦",
   Inglaterra: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Irã: "🇮🇷", "País de Gales": "🏴󠁧󠁢󠁷󠁬󠁳󠁿", "África do Sul": "🇿🇦",
-  Haiti: "🇭🇹", Escócia: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  Haiti: "🇭🇹", Escócia: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", Noruega: "🇳🇴",
 };
 
 const DEFAULT_GAMES = [
-  { id: "g1", group: "C", home: "Brasil", away: "Marrocos",  date: "13/06 (Sáb) · 19h BRT",    stadium: "MetLife Stadium, Nova Jersey",          kickoff: new Date("2026-06-13T22:00:00Z").getTime() },
-  { id: "g2", group: "C", home: "Brasil", away: "Haiti",     date: "19/06 (Sex) · 21h30 BRT",  stadium: "Lincoln Financial Field, Filadélfia",   kickoff: new Date("2026-06-20T00:30:00Z").getTime() },
-  { id: "g3", group: "C", home: "Escócia", away: "Brasil",   date: "24/06 (Qua) · 19h BRT",    stadium: "Hard Rock Stadium, Miami",              kickoff: new Date("2026-06-24T22:00:00Z").getTime() },
-  { id: "g4", group: "Oitavas de Final", home: "Brasil", away: "Japão", date: "29/06 (Seg) · 14h BRT", stadium: "NRG Stadium, Houston", kickoff: new Date("2026-06-29T17:00:00Z").getTime() },
+  { id: "g1", group: "C",       home: "Brasil",  away: "Marrocos", date: "13/06 (Sáb) · 19h BRT",   stadium: "MetLife Stadium, Nova Jersey",       kickoff: new Date("2026-06-13T22:00:00Z").getTime() },
+  { id: "g2", group: "C",       home: "Brasil",  away: "Haiti",    date: "19/06 (Sex) · 21h30 BRT", stadium: "Lincoln Financial Field, Filadélfia", kickoff: new Date("2026-06-20T00:30:00Z").getTime() },
+  { id: "g3", group: "C",       home: "Escócia", away: "Brasil",   date: "24/06 (Qua) · 19h BRT",   stadium: "Hard Rock Stadium, Miami",           kickoff: new Date("2026-06-24T22:00:00Z").getTime() },
+  { id: "g4", group: "16 avos", home: "Brasil",  away: "Japão",    date: "29/06 (Seg) · 14h BRT",   stadium: "NRG Stadium, Houston",               kickoff: new Date("2026-06-29T17:00:00Z").getTime() },
+  { id: "g5", group: "Oitavas", home: "Brasil",  away: "Noruega",  date: "05/07 (Dom) · 17h BRT",   stadium: "MetLife Stadium, Nova Jersey",       kickoff: new Date("2026-07-05T20:00:00Z").getTime() },
 ];
 
 // Um jogo está revelado se o horário de início já passou
@@ -65,19 +66,16 @@ function saveToStorage(key, data) {
 }
 function generateId() { return Math.random().toString(36).substr(2, 9); }
 
-// ── Garante que só os 3 jogos oficiais existam ──────────────────────────────
-const OFFICIAL_IDS = ["g1", "g2", "g3", "g4"];
+// ── Garante que só os 5 jogos oficiais existam ──────────────────────────────
+const OFFICIAL_IDS = ["g1", "g2", "g3", "g4", "g5"];
 function loadGames() {
   // Sempre retorna apenas os 3 jogos oficiais do DEFAULT_GAMES,
   // mas preserva resultados (homeScore/awayScore) se já foram cadastrados
-  // — nunca antes do horário real do jogo (mesma trava do listener do Firestore).
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY_GAMES) || "[]");
     return DEFAULT_GAMES.map(def => {
       const existing = saved.find(s => s.id === def.id);
-      if (!existing || existing.homeScore === undefined || existing.homeScore === null) return def;
-      if (def.kickoff && Date.now() < def.kickoff) return def;
-      return { ...def, homeScore: existing.homeScore, awayScore: existing.awayScore };
+      return existing ? { ...def, homeScore: existing.homeScore, awayScore: existing.awayScore } : def;
     });
   } catch { return DEFAULT_GAMES; }
 }
@@ -87,10 +85,11 @@ function loadGames() {
 // Jogo 2 (g2): aparece esmaecido até 13/06, disponível a partir de 14/06; some a partir de 20/06
 // Jogo 3 (g3): aparece esmaecido até 19/06, disponível a partir de 20/06
 const GAME_RULES = {
-  g1: { openFrom: null,          hideFrom: new Date("2026-06-14T00:00:00-03:00") },
-  g2: { openFrom: new Date("2026-06-14T00:00:00-03:00"), hideFrom: new Date("2026-06-20T00:00:00-03:00") },
-  g3: { openFrom: new Date("2026-06-20T00:00:00-03:00"), hideFrom: new Date("2026-06-25T00:00:00-03:00") },
-  g4: { openFrom: new Date("2026-06-25T00:00:00-03:00"), hideFrom: null },
+  g1: { openFrom: null,                                              hideFrom: new Date("2026-06-14T00:00:00-03:00") },
+  g2: { openFrom: new Date("2026-06-14T00:00:00-03:00"),            hideFrom: new Date("2026-06-20T00:00:00-03:00") },
+  g3: { openFrom: new Date("2026-06-20T00:00:00-03:00"),            hideFrom: new Date("2026-06-25T00:00:00-03:00") },
+  g4: { openFrom: new Date("2026-06-25T00:00:00-03:00"),            hideFrom: new Date("2026-06-29T17:00:00-03:00") },
+  g5: { openFrom: new Date("2026-06-29T17:00:00-03:00"),            hideFrom: null },
 };
 function getGameStatus(gameId) {
   const now = new Date();
@@ -113,17 +112,12 @@ function isBrasilLosing(game, homeScore, awayScore) {
 
 // ─── ScoreInput ───────────────────────────────────────────────────────────────
 function ScoreInput({ value, onChange, disabled, fullWidth }) {
-  const nums = [0,1,2,3,4,5,6,7,8,9];
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: fullWidth ? "repeat(5, 1fr)" : `repeat(${nums.length}, 40px)`,
-      gap: 6,
-      width: fullWidth ? "100%" : "auto",
-    }}>
-      {nums.map(n => (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, width: fullWidth ? "100%" : "auto" }}>
+      {[0,1,2,3,4,5].map(n => (
         <button key={n} onClick={() => !disabled && onChange(n)}
           style={{
+            flex: fullWidth ? 1 : "none",
             width: fullWidth ? undefined : 40,
             height: 44, borderRadius: 10,
             background: value === n ? "#1B5E20" : "#F0F7F0",
@@ -314,7 +308,7 @@ function PixModal({ betName, amount, onConfirm, onClose }) {
             Quase lá, {betName}!
           </div>
           <div style={{ fontSize: 14, color: "#64748B", marginTop: 6, lineHeight: 1.5 }}>
-            Seu{amount / 5 !== 1 ? "s" : ""} palpite{amount / 5 !== 1 ? "s" : ""} já {amount / 5 !== 1 ? "foram registrados" : "foi registrado"}. Agora falta só o Pix pra valer.
+            Para confirmar sua aposta, faça o Pix e envie o comprovante.
           </div>
         </div>
 
@@ -426,12 +420,6 @@ function RulesModal({ onClose }) {
       title: "FECHAMENTO AUTOMÁTICO",
       text: "As apostas encerram automaticamente no horário oficial do jogo.",
       highlight: "Não serão aceitas exceções.",
-    },
-    {
-      icon: "🕐",
-      title: "VALE SÓ O TEMPO NORMAL",
-      text: "O placar do seu palpite é comparado apenas com o resultado dos 90 minutos (tempo normal).",
-      highlight: "Prorrogação e pênaltis NÃO entram na contagem.",
     },
     {
       icon: "📲",
@@ -626,14 +614,9 @@ function CentroAoVivo({ liveData, bets, games, calcSituacaoAoVivo }) {
     sem:      "Sem palpite neste jogo",
   };
 
-  // Apenas apostadores que deram palpite NESTE jogo (não soma com outros jogos)
-  const apostasDoJogoAtual = hasLive
-    ? bets.filter(b => b.scores?.[liveData.gameId]?.home !== undefined)
-    : [];
-
   // Calcular situação ao vivo de cada apostador
   const apostadoresVivos = hasLive
-    ? apostasDoJogoAtual.map(b => ({
+    ? bets.map(b => ({
         ...b,
         sit: calcSituacaoAoVivo(b, liveData.gameId, liveData.homeScore, liveData.awayScore),
       })).sort((a, b) => {
@@ -643,7 +626,7 @@ function CentroAoVivo({ liveData, bets, games, calcSituacaoAoVivo }) {
     : [];
 
   const vencedoresAtuais = apostadoresVivos.filter(b => b.sit === "exato");
-  const premio = apostasDoJogoAtual.length * 5;
+  const premio = bets.length * 5;
 
   if (!hasLive) {
     return (
@@ -950,13 +933,6 @@ export default function BolaoApp() {
       setGames(DEFAULT_GAMES.map(def => {
         const saved = savedGames.find(s => s.id === def.id);
         if (!saved || saved.homeScore === null || saved.homeScore === undefined) return def;
-        // ── TRAVA DE SEGURANÇA ──────────────────────────────────────────────
-        // Nunca aceita um resultado/placar para um jogo antes do horário real
-        // dele (def.kickoff). Protege contra Worker com fixture ID errado,
-        // resultado salvo por engano no Admin, ou qualquer dado inconsistente
-        // no Firestore: enquanto o jogo não começou de fato, ele simplesmente
-        // não tem placar nem status — ponto final, independente do que está salvo.
-        if (def.kickoff && Date.now() < def.kickoff) return def;
         return { ...def, homeScore: saved.homeScore, awayScore: saved.awayScore };
       }));
     }, (err) => {
@@ -1014,7 +990,6 @@ export default function BolaoApp() {
   const [betScores, setBetScores] = useState({});
   const [betStep, setBetStep] = useState(0);
   const [brasilWarning, setBrasilWarning] = useState(null);
-  const [sessionPalpites, setSessionPalpites] = useState([]); // palpites já registrados nesta sessão (antes de finalizar)
 
   const [adminTab, setAdminTab] = useState("bets");
   const [filterGame, setFilterGame] = useState("all");
@@ -1067,12 +1042,18 @@ export default function BolaoApp() {
     setBetScores(prev => ({ ...prev, [gameId]: { ...prev[gameId], [side]: val } }));
   }
 
-  // Confirmar Aposta agora REGISTRA o palpite de imediato — não depende do botão "Já fiz o Pix".
-  async function confirmarPalpite() {
+  function submitBet() {
     if (!betName.trim()) { notify("Informe seu nome!", "error"); return; }
-    const palpitesValidos = Object.entries(betScores).filter(([id, s]) => s?.home !== undefined && s?.away !== undefined);
-    if (palpitesValidos.length === 0) { notify("Escolha pelo menos um placar!", "error"); return; }
+    // Count how many games have palpites
+    const numPalpites = Object.keys(betScores).filter(id => betScores[id]?.home !== undefined && betScores[id]?.away !== undefined).length;
+    if (numPalpites === 0) { notify("Escolha pelo menos um placar!", "error"); return; }
+    // Show Pix modal before saving
+    setPixBetName(betName.trim());
+    setPixAmount(numPalpites * 5);
+    setShowPixModal(true);
+  }
 
+  async function confirmBetAfterPix() {
     const id = generateId();
     const newBet = {
       name: betName.trim(), phone: betPhone.trim(),
@@ -1080,21 +1061,14 @@ export default function BolaoApp() {
     };
     try {
       await setDoc(doc(db, "bets", id), newBet);
+      notify(`Aposta de ${betName} registrada! ⚽🇧🇷`);
     } catch (err) {
       console.error("Erro ao salvar aposta:", err);
+      // Fallback local
       setBets(prev => [...prev, { id, ...newBet }]);
+      notify(`Aposta registrada localmente. ⚽`);
     }
-    notify(`Palpite de ${betName.trim()} registrado! ⚽`);
-    setSessionPalpites(prev => [...prev, ...palpitesValidos.map(([gid, s]) => ({ gameId: gid, home: s.home, away: s.away }))]);
-    setBetScores({});
-    setBetStep(3);
-  }
-
-  // Encerra a sessão depois de "Finalizar e ver Pix" → "Já fiz o Pix!" — só fecha tudo,
-  // pois cada palpite já foi salvo individualmente no momento em que foi confirmado.
-  function finalizarSessao() {
-    notify(`Apostas de ${betName.trim()} registradas! Boa sorte 🍀⚽`);
-    setBetName(""); setBetPhone(""); setBetScores({}); setSessionPalpites([]); setBetStep(0);
+    setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0);
     setShowPixModal(false);
     setView("home");
   }
@@ -1287,35 +1261,13 @@ export default function BolaoApp() {
                 color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
               }}>EUA • México • Canadá</p>
 
-              {/* Stat mini cards — agora refletem o jogo aberto agora, não a Copa inteira */}
-              {(() => {
-                const jogoAtual = games.find(g => getGameStatus(g.id) === "open");
-                const apostasJogoAtual = jogoAtual ? bets.filter(b => b.scores?.[jogoAtual.id]?.home !== undefined) : [];
-                const premioJogoAtual = apostasJogoAtual.length * 5;
-
-                // Último jogo já encerrado (o de kickoff mais recente entre os que têm placar)
-                const jogosEncerrados = games.filter(g => g.homeScore !== undefined).sort((a, b) => b.kickoff - a.kickoff);
-                const ultimo = jogosEncerrados[0];
-                let nomeVal = "—", labelResultado = "Aguardando 1º resultado";
-                if (ultimo) {
-                  const adv = ultimo.home === "Brasil" ? ultimo.away : ultimo.home;
-                  const ws = bets.filter(b => {
-                    const s = b.scores?.[ultimo.id];
-                    return s && s.home === ultimo.homeScore && s.away === ultimo.awayScore;
-                  });
-                  nomeVal = ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—";
-                  labelResultado = `🇧🇷 ${ultimo.homeScore}×${ultimo.awayScore} ${FLAGS[adv] || ""} ${adv}`;
-                }
-
-                const cards = [
-                  { icon: "👥", val: apostasJogoAtual.length, label: "Apostadores", big: true },
-                  { icon: "💰", val: `R$${premioJogoAtual}`, label: "Prêmio do jogo", big: true },
-                  { icon: "🏆", val: nomeVal, label: labelResultado, big: nomeVal.length <= 9 },
-                ];
-
-                return (
+              {/* Stat mini cards */}
               <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
-                {cards.map(({ icon, val, label, big }) => (
+                {[
+                  ["👥", bets.length, "Apostadores"],
+                  ["⚽", games.length, "Jogos"],
+                  ["🏆", (() => { const ws = bets.filter(b => games.some(g => g.homeScore !== undefined && b.scores?.[g.id]?.home === g.homeScore && b.scores?.[g.id]?.away === g.awayScore)); return ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—"; })(), "Campeão"],
+                ].map(([icon, val, label]) => (
                   <div key={label} style={{
                     flex: 1, background: "rgba(255,255,255,0.08)",
                     borderRadius: 16, padding: "12px 6px",
@@ -1324,15 +1276,13 @@ export default function BolaoApp() {
                     <span style={{ fontSize: 16 }}>{icon}</span>
                     <span style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 800,
-                      fontSize: big ? 20 : 13,
+                      fontSize: typeof val === "number" ? 22 : 14,
                       color: C.yellow, lineHeight: 1,
                     }}>{val}</span>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 0.5, textAlign: "center" }}>{label}</span>
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 600, letterSpacing: 0.5 }}>{label}</span>
                   </div>
                 ))}
               </div>
-                );
-              })()}
 
               {/* CTA */}
               <div style={{ display: "flex", justifyContent: "center" }}>
@@ -1395,11 +1345,14 @@ export default function BolaoApp() {
 
             {/* ── JOGOS DO BRASIL ── */}
             <div style={{ padding: "28px 20px 0" }}>
-              <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 14 }}>🇧🇷 Jogos do Brasil</h2>
-
-              {(() => {
-                const renderCard = (g, i) => {
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text }}>🇧🇷 Jogos do Brasil</h2>
+                <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, background: C.border, borderRadius: 20, padding: "3px 10px" }}>Grupo C</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {games.map((g, i) => {
                   const status = getGameStatus(g.id);
+                  if (status === "hidden") return null;
                   const locked = status === "locked";
                   const done = g.homeScore !== undefined;
                   const brScore = g.home === "Brasil" ? g.homeScore : g.awayScore;
@@ -1467,47 +1420,15 @@ export default function BolaoApp() {
                               {win ? "Vitória" : draw ? "Empate" : "Derrota"}
                             </span>
                           )}
-                          {!done && status === "open" && (
+                          {!done && !locked && (
                             <span style={{ fontSize: 10, fontWeight: 600, color: C.green, background: "#DCFCE7", padding: "2px 9px", borderRadius: 20 }}>Aberto</span>
-                          )}
-                          {!done && status === "hidden" && (
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#92400E", background: "#FEF9C3", padding: "2px 9px", borderRadius: 20 }}>⏳ Aguardando resultado</span>
                           )}
                         </div>
                       </div>
                     </div>
                   );
-                };
-
-                // Mata-mata (qualquer fase que não seja a fase de grupos "C") sempre aparece primeiro e separado.
-                const mataMata   = games.filter(g => g.group !== "C");
-                const faseGrupos = games.filter(g => g.group === "C");
-
-                return (
-                  <>
-                    {mataMata.length > 0 && (
-                      <div style={{ marginBottom: 20 }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: "#92400E", letterSpacing: 1 }}>🏆 MATA-MATA</span>
-                          <span style={{ fontSize: 10, color: "#92400E", fontWeight: 700, background: "#FEF3C7", borderRadius: 20, padding: "3px 10px" }}>{mataMata[0].group}</span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                          {mataMata.map((g, i) => renderCard(g, i))}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: 1 }}>FASE DE GRUPOS</span>
-                        <span style={{ fontSize: 10, color: C.muted, fontWeight: 600, background: C.border, borderRadius: 20, padding: "3px 10px" }}>Grupo C</span>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {faseGrupos.map((g, i) => renderCard(g, i))}
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
+                })}
+              </div>
             </div>
 
 
@@ -1519,28 +1440,18 @@ export default function BolaoApp() {
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, letterSpacing: 2, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>Casa do Kaká</div>
               <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, color: C.text, fontSize: 26, lineHeight: 1.1 }}>
-                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : betStep === 2 ? "Confirmar Aposta" : "Palpite Registrado! ✅"}
+                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : "Confirmar Aposta"}
               </h2>
             </div>
 
             {/* Regra Brasil banner */}
             <div style={{
-              background: C.green, borderRadius: 16, padding: "12px 16px", marginBottom: 10,
+              background: C.green, borderRadius: 16, padding: "12px 16px", marginBottom: 20,
               fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 500, lineHeight: 1.5,
               display: "flex", alignItems: "center", gap: 8,
             }}>
               <span style={{ fontSize: 18 }}>🇧🇷</span>
               <em>Regra da Casa: aqui não tem vez pra secador.</em>
-            </div>
-
-            {/* Aviso: vale só tempo normal */}
-            <div style={{
-              background: "#FFF7E6", border: "1px solid #F8B60255", borderRadius: 16, padding: "10px 16px", marginBottom: 20,
-              fontSize: 11.5, color: "#92400E", fontWeight: 600, lineHeight: 1.5,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span style={{ fontSize: 16 }}>🕐</span>
-              <span>Seu palpite vale só pelo <strong>tempo normal (90 min)</strong>. Prorrogação e pênaltis não contam.</span>
             </div>
 
             {/* Progress */}
@@ -1654,52 +1565,7 @@ export default function BolaoApp() {
 
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setBetStep(1)} style={{ ...btn(), padding: "11px 16px" }}>←</button>
-                  <button onClick={confirmarPalpite} style={{ ...btn("primary"), flex: 1, fontSize: 16 }}>✅ Confirmar Aposta!</button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Palpite registrado — pode dar outro ou finalizar e ver o Pix */}
-            {betStep === 3 && (
-              <div>
-                <div style={{
-                  background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderRadius: 16,
-                  padding: "18px 16px", textAlign: "center", marginBottom: 16,
-                }}>
-                  <div style={{ fontSize: 32, marginBottom: 6 }}>✅</div>
-                  <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 16, color: "#166534" }}>
-                    Palpite registrado, {betName.trim()}!
-                  </div>
-                  <div style={{ fontSize: 12, color: "#15803D", marginTop: 4 }}>
-                    Quer dar outro palpite? Não precisa repetir seus dados.
-                  </div>
-                </div>
-
-                <div style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 16, padding: 18, marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, letterSpacing: 2, color: "#F8B602", marginBottom: 10 }}>SEUS PALPITES NESTA SESSÃO</div>
-                  {sessionPalpites.map((p, i) => {
-                    const g = games.find(gm => gm.id === p.gameId);
-                    return (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #1B5E2011" }}>
-                        <span style={{ fontSize: 12, color: "#555555" }}>{g ? `${FLAGS[g.home]} ${g.home} × ${g.away} ${FLAGS[g.away]}` : p.gameId}</span>
-                        <span style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 16, color: "#F8B602" }}>{p.home} — {p.away}</span>
-                      </div>
-                    );
-                  })}
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, paddingTop: 10, borderTop: "1px solid #E0E0E0" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#111111" }}>Total ({sessionPalpites.length} palpite{sessionPalpites.length !== 1 ? "s" : ""})</span>
-                    <span style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: 18, color: "#166534" }}>R$ {sessionPalpites.length * 5},00</span>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <button onClick={() => setBetStep(1)} style={{ ...btn(), fontSize: 14 }}>+ Dar outro palpite</button>
-                  <button
-                    onClick={() => { setPixBetName(betName.trim()); setPixAmount(sessionPalpites.length * 5); setShowPixModal(true); }}
-                    style={{ ...btn("primary"), fontSize: 16 }}
-                  >
-                    💸 Finalizar — Ver Pix (R${sessionPalpites.length * 5})
-                  </button>
+                  <button onClick={submitBet} style={{ ...btn("primary"), flex: 1, fontSize: 16 }}>✅ Confirmar Aposta!</button>
                 </div>
               </div>
             )}
@@ -1763,14 +1629,9 @@ export default function BolaoApp() {
                   <option value="all">Todos os jogos</option>
                   {games.map(g => <option key={g.id} value={g.id}>{FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}</option>)}
                 </select>
-                {(() => {
-                  // Filtra a lista de apostadores pelo jogo escolhido — só quem deu palpite NAQUELE jogo aparece.
-                  const betsFiltradas = filterGame === "all"
-                    ? bets
-                    : bets.filter(b => b.scores?.[filterGame]?.home !== undefined);
-                  return betsFiltradas.length === 0
-                  ? <div style={{ textAlign: "center", padding: 32, color: "#4A4A4A", background: "#FFFFFF", borderRadius: 16 }}>Nenhuma aposta registrada para esse jogo.</div>
-                  : betsFiltradas.map(bet => (
+                {bets.length === 0
+                  ? <div style={{ textAlign: "center", padding: 32, color: "#4A4A4A", background: "#FFFFFF", borderRadius: 16 }}>Nenhuma aposta registrada.</div>
+                  : bets.map(bet => (
                     <div key={bet.id} style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 14, padding: 16, marginBottom: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                         <div>
@@ -1806,8 +1667,8 @@ export default function BolaoApp() {
                           style={{ ...btn("danger"), padding: "7px 14px", fontSize: 12 }}>🗑 Excluir</button>
                       </div>
                     </div>
-                  ));
-                })()}
+                  ))
+                }
               </div>
             )}
 
@@ -1851,7 +1712,6 @@ export default function BolaoApp() {
                         <div style={{ fontSize: 11, color: "#4A4A4A" }}>{g.date} · {g.stadium}</div>
                       </div>
                       {g.homeScore !== undefined && <Badge color="#4CAF50">{g.homeScore}–{g.awayScore}</Badge>}
-                      {g.homeScore !== undefined && <Badge color="#166534">Finalizado</Badge>}
                       <button onClick={() => deleteGame(g.id)} style={{ ...btn("danger"), padding: "6px 10px", fontSize: 12 }}>🗑</button>
                     </div>
                   ))}
@@ -2101,14 +1961,7 @@ export default function BolaoApp() {
             )}          </div>
         )}
         {/* ── PAINEL DE APOSTAS (público) ──────────────────────────────────── */}
-        {view === "panel" && (() => {
-          // Considera só o(s) jogo(s) abertos para aposta agora — jogos já encerrados
-          // (com prêmio pago) não entram mais nesse painel, só na lista histórica abaixo.
-          const jogosAbertos = games.filter(g => getGameStatus(g.id) === "open");
-          const apostasAtuais = jogosAbertos.length
-            ? bets.filter(b => jogosAbertos.some(g => b.scores?.[g.id]?.home !== undefined))
-            : [];
-          return (
+        {view === "panel" && (
           <div style={{ animation: "fadeIn 0.3s ease", padding: "0 0 40px" }}>
 
             {/* Header */}
@@ -2126,11 +1979,11 @@ export default function BolaoApp() {
                 Painel de Apostas
               </h1>
               <p style={{ fontSize: 13, color: C.muted, fontWeight: 400, marginTop: 4 }}>
-                {apostasAtuais.length} aposta{apostasAtuais.length !== 1 ? "s" : ""} · R$5 por palpite
+                {bets.length} aposta{bets.length !== 1 ? "s" : ""} · R$5 por palpite
               </p>
 
               {/* Prize highlight card */}
-              {apostasAtuais.length > 0 && (
+              {bets.length > 0 && (
                 <div style={{
                   marginTop: 18,
                   background: "linear-gradient(135deg, #166534 0%, #14532D 100%)",
@@ -2143,17 +1996,17 @@ export default function BolaoApp() {
                       fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.55)",
                       letterSpacing: 1.5, marginBottom: 4,
                     }}>
-                      🏆 PRÊMIO DESTE JOGO
+                      🏆 ARRECADADO NA COPA (TODOS OS JOGOS)
                     </div>
                     <div style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 900,
                       fontSize: 38, color: "#FACC15", lineHeight: 1,
                       letterSpacing: -1,
                     }}>
-                      R$ {apostasAtuais.length * 5}<span style={{ fontSize: 22 }}>,00</span>
+                      R$ {bets.length * 5}<span style={{ fontSize: 22 }}>,00</span>
                     </div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 5 }}>
-                      {apostasAtuais.length} palpite{apostasAtuais.length !== 1 ? "s" : ""} × R$5,00
+                      {bets.length} palpite{bets.length !== 1 ? "s" : ""} × R$5,00
                     </div>
                   </div>
                   <div style={{ textAlign: "center" }}>
@@ -2170,7 +2023,7 @@ export default function BolaoApp() {
             </div>
 
             {/* Empty state */}
-            {apostasAtuais.length === 0 && (
+            {bets.length === 0 && (
               <div style={{ margin: "32px 20px 0", textAlign: "center",
                 padding: "48px 24px", background: C.surface,
                 borderRadius: 20, border: `1.5px solid ${C.border}` }}>
@@ -2183,9 +2036,9 @@ export default function BolaoApp() {
             )}
 
             {/* ── Status de pagamento ── */}
-            {apostasAtuais.length > 0 && (() => {
-              const pagos = apostasAtuais.filter(b => b.paid).length;
-              const pendentes = apostasAtuais.filter(b => !b.paid).length;
+            {bets.length > 0 && (() => {
+              const pagos = bets.filter(b => b.paid).length;
+              const pendentes = bets.filter(b => !b.paid).length;
               return (
                 <div style={{ padding: "12px 20px 0" }}>
                   {/* Aviso de exclusão automática */}
@@ -2231,12 +2084,9 @@ export default function BolaoApp() {
             })()}
 
             {/* ── Status de revelação (automático) ── */}
-            {/* Considera só o(s) jogo(s) abertos pra aposta agora — não conta jogos antigos já encerrados */}
-            {(() => {
-              const jogoAtualRevelado = jogosAbertos.length > 0 && jogosAbertos.some(g => isGameRevealed(g));
-              return apostasAtuais.length > 0 && (
+            {bets.length > 0 && (
               <div style={{ padding: "16px 20px 0" }}>
-                {!jogoAtualRevelado ? (
+                {!betsRevealed ? (
                   <div style={{
                     background: "#1E293B", borderRadius: 18,
                     padding: "16px 18px",
@@ -2276,8 +2126,7 @@ export default function BolaoApp() {
                   </div>
                 )}
               </div>
-              );
-            })()}
+            )}
 
             {/* Lista de apostas por jogo */}
             {bets.length > 0 && (
@@ -2323,28 +2172,6 @@ export default function BolaoApp() {
                       {apostasJogo.length === 0 ? (
                         <div style={{ fontSize: 12, color: C.muted, padding: "10px 0 4px", fontStyle: "italic" }}>
                           Ninguém apostou neste jogo ainda.
-                        </div>
-                      ) : done ? (
-                        <div style={{
-                          background: "#FFFFFF", borderRadius: 16,
-                          border: `1.5px solid ${C.border}`,
-                          padding: "14px 16px",
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <span style={{
-                              fontSize: 11, fontWeight: 800, color: "#166534",
-                              background: "#F0FDF4", border: "1px solid #BBF7D0",
-                              borderRadius: 20, padding: "3px 10px", letterSpacing: 0.3,
-                            }}>🏁 JOGO ENCERRADO</span>
-                            <span style={{ fontSize: 12, color: C.muted }}>
-                              {apostasJogo.length} palpite{apostasJogo.length !== 1 ? "s" : ""} · R${premioJogo} arrecadado
-                            </span>
-                          </div>
-                          {vencedores.length === 0 && (
-                            <div style={{ fontSize: 12, color: C.muted, fontStyle: "italic", marginTop: 8 }}>
-                              Ninguém acertou o placar exato neste jogo.
-                            </div>
-                          )}
                         </div>
                       ) : (
                         <div style={{
@@ -2426,9 +2253,9 @@ export default function BolaoApp() {
             )}
 
           </div>
-          );
-        })()}
+        )}
 
+      {/* ── RULES MODAL ── */}
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
 
       {/* ── SEGREDO MODAL ── */}
@@ -2439,7 +2266,7 @@ export default function BolaoApp() {
         <PixModal
           betName={pixBetName}
           amount={pixAmount}
-          onConfirm={finalizarSessao}
+          onConfirm={confirmBetAfterPix}
           onClose={() => setShowPixModal(false)}
         />
       )}
