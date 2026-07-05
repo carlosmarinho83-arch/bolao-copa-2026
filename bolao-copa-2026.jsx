@@ -909,6 +909,7 @@ export default function BolaoApp() {
   }, [games]);
   const [pixBetName, setPixBetName] = useState("");
   const [pixAmount, setPixAmount] = useState(5);
+  const [sessionPalpites, setSessionPalpites] = useState(0);
 
   // ── Firebase: listener em tempo real para apostas ────────────────────────────
   useEffect(() => {
@@ -1065,8 +1066,10 @@ export default function BolaoApp() {
     }
 
     // Mostra a tela de sucesso primeiro; o Pix fica disponível por um botão
+    const totalPalpitesSessao = sessionPalpites + numPalpites;
+    setSessionPalpites(totalPalpitesSessao);
     setPixBetName(betName.trim());
-    setPixAmount(numPalpites * 5);
+    setPixAmount(totalPalpitesSessao * 5);
     setBetScores({}); setBetStep(3);
   }
 
@@ -1292,7 +1295,7 @@ export default function BolaoApp() {
               {/* CTA */}
               <div style={{ display: "flex", justifyContent: "center" }}>
                 <button
-                  onClick={() => { setBetStep(0); setView("bet"); }}
+                  onClick={() => { setBetStep(0); setSessionPalpites(0); setView("bet"); }}
                   style={{
                     width: "82%", height: 58, borderRadius: 18, border: "none",
                     background: C.yellow, color: C.greenDark,
@@ -1586,8 +1589,15 @@ export default function BolaoApp() {
                   <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 18, color: C.text, marginBottom: 6 }}>
                     Aposta registrada!
                   </div>
-                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 10 }}>
                     Não esqueça de fazer o Pix antes do apito. Boa sorte! ⚽🇧🇷
+                  </div>
+                  <div style={{
+                    display: "inline-block", background: "#F0FDF4", color: "#166534",
+                    fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 14,
+                    borderRadius: 20, padding: "6px 16px",
+                  }}>
+                    {sessionPalpites} palpite{sessionPalpites !== 1 ? "s" : ""} nesta sessão · R${pixAmount},00
                   </div>
                 </div>
 
@@ -1605,7 +1615,7 @@ export default function BolaoApp() {
                     ➕ Fazer outra aposta
                   </button>
                   <button
-                    onClick={() => { setBetName(""); setBetPhone(""); setBetStep(0); setView("home"); }}
+                    onClick={() => { setBetName(""); setBetPhone(""); setSessionPalpites(0); setBetStep(0); setView("home"); }}
                     style={{ ...btn(), fontSize: 15 }}
                   >
                     🏠 Voltar para o Início
