@@ -1064,11 +1064,10 @@ export default function BolaoApp() {
       notify(`Aposta registrada localmente. ⚽`);
     }
 
-    // Mostra os dados do Pix por cima da tela de sucesso
+    // Mostra a tela de sucesso primeiro; o Pix fica disponível por um botão
     setPixBetName(betName.trim());
     setPixAmount(numPalpites * 5);
     setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(3);
-    setShowPixModal(true);
   }
 
   function confirmBetAfterPix() {
@@ -1594,8 +1593,14 @@ export default function BolaoApp() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <button
-                    onClick={() => { setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0); }}
+                    onClick={() => setShowPixModal(true)}
                     style={{ ...btn("primary"), fontSize: 15 }}
+                  >
+                    💸 Fazer o Pix
+                  </button>
+                  <button
+                    onClick={() => { setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0); }}
+                    style={{ ...btn(), fontSize: 15 }}
                   >
                     ➕ Fazer outra aposta
                   </button>
