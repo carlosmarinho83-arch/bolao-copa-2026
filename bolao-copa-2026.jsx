@@ -1067,7 +1067,7 @@ export default function BolaoApp() {
     // Mostra a tela de sucesso primeiro; o Pix fica disponível por um botão
     setPixBetName(betName.trim());
     setPixAmount(numPalpites * 5);
-    setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(3);
+    setBetScores({}); setBetStep(3);
   }
 
   function confirmBetAfterPix() {
@@ -1599,13 +1599,13 @@ export default function BolaoApp() {
                     💸 Fazer o Pix
                   </button>
                   <button
-                    onClick={() => { setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0); }}
+                    onClick={() => { setBetScores({}); setBetStep(1); }}
                     style={{ ...btn(), fontSize: 15 }}
                   >
                     ➕ Fazer outra aposta
                   </button>
                   <button
-                    onClick={() => { setBetStep(0); setView("home"); }}
+                    onClick={() => { setBetName(""); setBetPhone(""); setBetStep(0); setView("home"); }}
                     style={{ ...btn(), fontSize: 15 }}
                   >
                     🏠 Voltar para o Início
