@@ -1043,18 +1043,12 @@ export default function BolaoApp() {
     setBetScores(prev => ({ ...prev, [gameId]: { ...prev[gameId], [side]: val } }));
   }
 
-  function submitBet() {
+  async function submitBet() {
     if (!betName.trim()) { notify("Informe seu nome!", "error"); return; }
     // Count how many games have palpites
     const numPalpites = Object.keys(betScores).filter(id => betScores[id]?.home !== undefined && betScores[id]?.away !== undefined).length;
     if (numPalpites === 0) { notify("Escolha pelo menos um placar!", "error"); return; }
-    // Show Pix modal before saving
-    setPixBetName(betName.trim());
-    setPixAmount(numPalpites * 5);
-    setShowPixModal(true);
-  }
 
-  async function confirmBetAfterPix() {
     const id = generateId();
     const newBet = {
       name: betName.trim(), phone: betPhone.trim(),
@@ -1069,7 +1063,16 @@ export default function BolaoApp() {
       setBets(prev => [...prev, { id, ...newBet }]);
       notify(`Aposta registrada localmente. ⚽`);
     }
+
+    // Mostra os dados do Pix por cima da tela de sucesso
+    setPixBetName(betName.trim());
+    setPixAmount(numPalpites * 5);
     setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(3);
+    setShowPixModal(true);
+  }
+
+  function confirmBetAfterPix() {
+    // A aposta já foi salva ao confirmar — aqui só fecha o modal do Pix
     setShowPixModal(false);
   }
 
