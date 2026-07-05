@@ -626,7 +626,7 @@ function CentroAoVivo({ liveData, bets, games, calcSituacaoAoVivo }) {
     : [];
 
   const vencedoresAtuais = apostadoresVivos.filter(b => b.sit === "exato");
-  const premio = bets.length * 5;
+  const premio = bets.filter(b => b.scores?.[liveData?.gameId]).length * 5;
 
   if (!hasLive) {
     return (
@@ -1127,6 +1127,9 @@ export default function BolaoApp() {
   }
 
   const gamesWithResult = games.filter(g => g.homeScore !== undefined);
+  const openGames = games.filter(g => getGameStatus(g.id) === "open");
+  const currentGame = openGames[0] || null;
+  const betsAtual = currentGame ? bets.filter(b => b.scores?.[currentGame.id]) : [];
 
   if (splash) return <SplashScreen onDone={() => setSplash(false)} />;
   if (dbLoading) return (
@@ -1264,9 +1267,9 @@ export default function BolaoApp() {
               {/* Stat mini cards */}
               <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
                 {[
-                  ["👥", bets.length, "Apostadores"],
-                  ["⚽", games.length, "Jogos"],
-                  ["🏆", (() => { const ws = bets.filter(b => games.some(g => g.homeScore !== undefined && b.scores?.[g.id]?.home === g.homeScore && b.scores?.[g.id]?.away === g.awayScore)); return ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—"; })(), "Campeão"],
+                  ["👥", betsAtual.length, "Apostadores"],
+                  ["⚽", openGames.length, "Jogos"],
+                  ["🏆", (() => { const ws = currentGame && currentGame.homeScore !== undefined ? betsAtual.filter(b => b.scores?.[currentGame.id]?.home === currentGame.homeScore && b.scores?.[currentGame.id]?.away === currentGame.awayScore) : []; return ws.length > 0 ? ws.map(w => w.name.split(" ")[0]).join(", ") : "—"; })(), "Campeão"],
                 ].map(([icon, val, label]) => (
                   <div key={label} style={{
                     flex: 1, background: "rgba(255,255,255,0.08)",
@@ -1979,11 +1982,11 @@ export default function BolaoApp() {
                 Painel de Apostas
               </h1>
               <p style={{ fontSize: 13, color: C.muted, fontWeight: 400, marginTop: 4 }}>
-                {bets.length} aposta{bets.length !== 1 ? "s" : ""} · R$5 por palpite
+                {betsAtual.length} aposta{betsAtual.length !== 1 ? "s" : ""} · R$5 por palpite
               </p>
 
               {/* Prize highlight card */}
-              {bets.length > 0 && (
+              {betsAtual.length > 0 && (
                 <div style={{
                   marginTop: 18,
                   background: "linear-gradient(135deg, #166534 0%, #14532D 100%)",
@@ -1996,17 +1999,17 @@ export default function BolaoApp() {
                       fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.55)",
                       letterSpacing: 1.5, marginBottom: 4,
                     }}>
-                      🏆 ARRECADADO NA COPA (TODOS OS JOGOS)
+                      🏆 ARRECADADO NESTE JOGO
                     </div>
                     <div style={{
                       fontFamily: "'Poppins',sans-serif", fontWeight: 900,
                       fontSize: 38, color: "#FACC15", lineHeight: 1,
                       letterSpacing: -1,
                     }}>
-                      R$ {bets.length * 5}<span style={{ fontSize: 22 }}>,00</span>
+                      R$ {betsAtual.length * 5}<span style={{ fontSize: 22 }}>,00</span>
                     </div>
                     <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginTop: 5 }}>
-                      {bets.length} palpite{bets.length !== 1 ? "s" : ""} × R$5,00
+                      {betsAtual.length} palpite{betsAtual.length !== 1 ? "s" : ""} × R$5,00
                     </div>
                   </div>
                   <div style={{ textAlign: "center" }}>
@@ -2023,7 +2026,7 @@ export default function BolaoApp() {
             </div>
 
             {/* Empty state */}
-            {bets.length === 0 && (
+            {betsAtual.length === 0 && (
               <div style={{ margin: "32px 20px 0", textAlign: "center",
                 padding: "48px 24px", background: C.surface,
                 borderRadius: 20, border: `1.5px solid ${C.border}` }}>
@@ -2036,9 +2039,9 @@ export default function BolaoApp() {
             )}
 
             {/* ── Status de pagamento ── */}
-            {bets.length > 0 && (() => {
-              const pagos = bets.filter(b => b.paid).length;
-              const pendentes = bets.filter(b => !b.paid).length;
+            {betsAtual.length > 0 && (() => {
+              const pagos = betsAtual.filter(b => b.paid).length;
+              const pendentes = betsAtual.filter(b => !b.paid).length;
               return (
                 <div style={{ padding: "12px 20px 0" }}>
                   {/* Aviso de exclusão automática */}
@@ -2084,7 +2087,7 @@ export default function BolaoApp() {
             })()}
 
             {/* ── Status de revelação (automático) ── */}
-            {bets.length > 0 && (
+            {betsAtual.length > 0 && (
               <div style={{ padding: "16px 20px 0" }}>
                 {!betsRevealed ? (
                   <div style={{
