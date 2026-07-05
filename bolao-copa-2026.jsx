@@ -995,6 +995,7 @@ export default function BolaoApp() {
   const [filterGame, setFilterGame] = useState("all");
   const [newGame, setNewGame] = useState({ group: "A", home: "", away: "", date: "", stadium: "" });
   const [resultScores, setResultScores] = useState({});
+  const [expandedGames, setExpandedGames] = useState({});
 
   // localStorage como fallback de emergência apenas
   useEffect(() => { if (bets.length) saveToStorage(STORAGE_KEY_BETS, bets); }, [bets]);
@@ -2134,7 +2135,7 @@ export default function BolaoApp() {
             {/* Lista de apostas por jogo */}
             {bets.length > 0 && (
               <div style={{ padding: "20px 20px 0", display: "flex", flexDirection: "column", gap: 20 }}>
-                {games.map(g => {
+                {(currentGame ? [currentGame, ...games.filter(g => g.id !== currentGame.id)] : games).map(g => {
                   const apostasJogo = bets.filter(b => b.scores?.[g.id]?.home !== undefined);
                   const premioJogo = apostasJogo.length * 5;
                   const adversario = g.home === "Brasil" ? g.away : g.home;
@@ -2143,11 +2144,18 @@ export default function BolaoApp() {
                     const s = b.scores[g.id];
                     return s.home === g.homeScore && s.away === g.awayScore;
                   }) : [];
+                  const expanded = expandedGames[g.id] !== undefined ? expandedGames[g.id] : !done;
 
                   return (
                     <div key={g.id}>
-                      {/* Cabeçalho do jogo */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                      {/* Cabeçalho do jogo (clicável se já encerrado) */}
+                      <div
+                        onClick={() => done && setExpandedGames(prev => ({ ...prev, [g.id]: !expanded }))}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10,
+                          cursor: done ? "pointer" : "default", userSelect: "none",
+                        }}
+                      >
                         <div>
                           <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 15, color: C.text }}>
                             🇧🇷 Brasil × {FLAGS[adversario] || ""} {adversario}
@@ -2162,17 +2170,25 @@ export default function BolaoApp() {
                             )}
                           </div>
                         </div>
-                        {done && (
-                          <div style={{
-                            background: "#1E293B", borderRadius: 10, padding: "4px 12px",
-                            fontFamily: "'Poppins',sans-serif", fontWeight: 900, fontSize: 15, color: "#FFFFFF",
-                          }}>
-                            {g.home === "Brasil" ? g.homeScore : g.awayScore} × {g.home === "Brasil" ? g.awayScore : g.homeScore}
-                          </div>
-                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {done && (
+                            <div style={{
+                              background: "#1E293B", borderRadius: 10, padding: "4px 12px",
+                              fontFamily: "'Poppins',sans-serif", fontWeight: 900, fontSize: 15, color: "#FFFFFF",
+                            }}>
+                              {g.home === "Brasil" ? g.homeScore : g.awayScore} × {g.home === "Brasil" ? g.awayScore : g.homeScore}
+                            </div>
+                          )}
+                          {done && (
+                            <span style={{
+                              fontSize: 12, color: C.muted, transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                              transition: "transform 0.2s ease",
+                            }}>▾</span>
+                          )}
+                        </div>
                       </div>
 
-                      {apostasJogo.length === 0 ? (
+                      {expanded && (apostasJogo.length === 0 ? (
                         <div style={{ fontSize: 12, color: C.muted, padding: "10px 0 4px", fontStyle: "italic" }}>
                           Ninguém apostou neste jogo ainda.
                         </div>
@@ -2232,10 +2248,10 @@ export default function BolaoApp() {
                             );
                           })}
                         </div>
-                      )}
+                      ))}
 
                       {/* Vencedores */}
-                      {done && vencedores.length > 0 && (
+                      {expanded && done && vencedores.length > 0 && (
                         <div style={{
                           marginTop: 8, background: "#FFFBEB",
                           border: "1px solid #FDE68A", borderRadius: 12,
