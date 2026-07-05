@@ -1627,15 +1627,17 @@ export default function BolaoApp() {
             </div>
 
             {/* Tab Apostas */}
-            {adminTab === "bets" && (
+            {adminTab === "bets" && (() => {
+              const betsFiltradas = bets.filter(b => filterGame === "all" || b.scores?.[filterGame] !== undefined);
+              return (
               <div>
                 <select style={{ ...inp, marginBottom: 16, width: "auto" }} value={filterGame} onChange={e => setFilterGame(e.target.value)}>
                   <option value="all">Todos os jogos</option>
                   {games.map(g => <option key={g.id} value={g.id}>{FLAGS[g.home]} {g.home} × {g.away} {FLAGS[g.away]}</option>)}
                 </select>
-                {bets.length === 0
+                {betsFiltradas.length === 0
                   ? <div style={{ textAlign: "center", padding: 32, color: "#4A4A4A", background: "#FFFFFF", borderRadius: 16 }}>Nenhuma aposta registrada.</div>
-                  : bets.map(bet => (
+                  : betsFiltradas.map(bet => (
                     <div key={bet.id} style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 14, padding: 16, marginBottom: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                         <div>
@@ -1674,7 +1676,8 @@ export default function BolaoApp() {
                   ))
                 }
               </div>
-            )}
+              );
+            })()}
 
             {/* Tab Jogos */}
             {adminTab === "games" && (
