@@ -1069,9 +1069,8 @@ export default function BolaoApp() {
       setBets(prev => [...prev, { id, ...newBet }]);
       notify(`Aposta registrada localmente. ⚽`);
     }
-    setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0);
+    setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(3);
     setShowPixModal(false);
-    setView("home");
   }
 
   function doLogin() {
@@ -1444,7 +1443,7 @@ export default function BolaoApp() {
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 10, letterSpacing: 2, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>Casa do Kaká</div>
               <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, color: C.text, fontSize: 26, lineHeight: 1.1 }}>
-                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : "Confirmar Aposta"}
+                {betStep === 0 ? "Seus Dados" : betStep === 1 ? "Dar Palpite ⚽" : betStep === 2 ? "Confirmar Aposta" : "Aposta Confirmada! 🎉"}
               </h2>
             </div>
 
@@ -1570,6 +1569,39 @@ export default function BolaoApp() {
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => setBetStep(1)} style={{ ...btn(), padding: "11px 16px" }}>←</button>
                   <button onClick={submitBet} style={{ ...btn("primary"), flex: 1, fontSize: 16 }}>✅ Confirmar Aposta!</button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Sucesso */}
+            {betStep === 3 && (
+              <div>
+                <div style={{
+                  background: "#FFFFFF", border: "1px solid #E0E0E0", borderRadius: 16,
+                  padding: "28px 20px", marginBottom: 20, textAlign: "center",
+                }}>
+                  <div style={{ fontSize: 44, marginBottom: 10 }}>🎉</div>
+                  <div style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 800, fontSize: 18, color: C.text, marginBottom: 6 }}>
+                    Aposta registrada!
+                  </div>
+                  <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+                    Não esqueça de fazer o Pix antes do apito. Boa sorte! ⚽🇧🇷
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={() => { setBetName(""); setBetPhone(""); setBetScores({}); setBetStep(0); }}
+                    style={{ ...btn("primary"), fontSize: 15 }}
+                  >
+                    ➕ Fazer outra aposta
+                  </button>
+                  <button
+                    onClick={() => { setBetStep(0); setView("home"); }}
+                    style={{ ...btn(), fontSize: 15 }}
+                  >
+                    🏠 Voltar para o Início
+                  </button>
                 </div>
               </div>
             )}
